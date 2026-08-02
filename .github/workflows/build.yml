@@ -28,6 +28,9 @@ jobs:
           cp pubspec.yaml scaffold/pubspec.yaml
           cp lib/main.dart scaffold/lib/main.dart
 
+      - name: Fix Kotlin version placeholder bug
+        run: sed -i "s/<latest-version>/1.9.22/" scaffold/android/build.gradle
+
       - name: Get dependencies
         working-directory: scaffold
         run: flutter pub get
