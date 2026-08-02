@@ -1,4 +1,4 @@
-.github/workflows/build.ymlname: Build APK
+name: Build APK
 
 on:
   push:
@@ -16,10 +16,27 @@ jobs:
           flutter-version: '3.24.0'
           channel: 'stable'
 
-      - run: flutter pub get
-      - run: flutter build apk --release
+      # Generate the full Flutter project skeleton (android/, ios/, etc.)
+      # in a fresh folder, since we only keep the app's own code in this repo.
+      - name: Scaffold Flutter project
+        run: flutter create --platforms=android scaffold
+
+      # Drop our actual app code into the freshly scaffolded project,
+      # overwriting the placeholder files it generated.
+      - name: Copy app code into scaffold
+        run: |
+          cp pubspec.yaml scaffold/pubspec.yaml
+          cp lib/main.dart scaffold/lib/main.dart
+
+      - name: Get dependencies
+        working-directory: scaffold
+        run: flutter pub get
+
+      - name: Build APK
+        working-directory: scaffold
+        run: flutter build apk --release
 
       - uses: actions/upload-artifact@v4
         with:
           name: hydrotrack-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: scaffold/build/app/outputs/flutter-apk/app-release.apk
