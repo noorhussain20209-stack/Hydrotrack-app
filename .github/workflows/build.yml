@@ -32,6 +32,7 @@ jobs:
         run: |
           sed -i "s/<latest-version>/1.9.22/" scaffold/android/build.gradle 2>/dev/null || true
           sed -i "s/<latest-version>/1.9.22/" scaffold/android/settings.gradle 2>/dev/null || true
+          sed -i 's/id "org.jetbrains.kotlin.android" version "1.7.10"/id "org.jetbrains.kotlin.android" version "1.9.22"/' scaffold/android/settings.gradle 2>/dev/null || true
 
       - name: Get dependencies
         working-directory: scaffold
