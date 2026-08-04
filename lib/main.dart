@@ -65,7 +65,7 @@ Future<void> _initNotifications() async {
 void _initTimezone() {
   tzdata.initializeTimeZones();
   final offset = DateTime.now().timeZoneOffset;
-  final location = tz.Location(
+  final location = tz.local;
     'device_local',
     [0],
     [offset.inSeconds],
