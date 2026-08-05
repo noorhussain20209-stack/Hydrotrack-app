@@ -37,7 +37,38 @@ const Map<String, String> kDrinkEmoji = {
   'Juice': 'ðŸ§ƒ',
   'Milk': 'ðŸ¥›',
 };
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await _initNotifications();
+  _initTimezone();
+  runApp(const HydroTrackApp());
+}
 
+Future<void> _initNotifications() async {
+  const AndroidInitializationSettings androidSettings =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+  const DarwinInitializationSettings iosSettings =
+      DarwinInitializationSettings();
+  const InitializationSettings settings = InitializationSettings(
+    android: androidSettings,
+    iOS: iosSettings,
+  );
+  await notificationsPlugin.initialize(settings);
+}
+
+void _initTimezone() {
+  tzdata.initializeTimeZones();
+  final offset = DateTime.now().timeZoneOffset;
+  
+  final location = tz.Location(
+    'device_local',
+    [offset.inSeconds],
+    [offset.inSeconds],
+    [],
+  );
+  
+  tz.setLocalLocation(location);
+}
 /// Metadata for each unlockable achievement badge.
 const Map<String, Map<String, String>> kBadgeInfo = {
   'first_drink': {'title': 'First Sip', 'emoji': 'ðŸ’§', 'desc': 'Logged your first drink'},
