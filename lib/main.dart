@@ -69,15 +69,26 @@ Future<void> main() async {
 
       [offset.inSeconds],
       [offset.inSeconds],
-      const [],
-    ),
-  );
+      Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await _initNotifications();
+  _initTimezone();
+  runApp(const HydroTrackApp());
 }
 
-class HydroTrackApp extends StatelessWidget {
-  const HydroTrackApp({super.key});
-
-  @override
+void _initTimezone() {
+  tzdata.initializeTimeZones();
+  final offset = DateTime.now().timeZoneOffset;
+  
+  final location = tz.Location(
+    'device_local',
+    [offset.inSeconds],
+    [offset.inSeconds],
+    [],
+  );
+  
+  tz.setLocalLocation(location);
+}
   Widget build(BuildContext context) {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: themeModeNotifier,
