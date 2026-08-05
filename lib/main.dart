@@ -12,14 +12,14 @@ final FlutterLocalNotificationsPlugin notificationsPlugin =
 final ValueNotifier<ThemeMode> themeModeNotifier =
     ValueNotifier(ThemeMode.light);
 
-/// Plays a soft system click sound plus a light haptic buzz â€” used on
+/// Plays a soft system click sound plus a light haptic buzz — used on
 /// every interactive tap in the app for a more premium, responsive feel.
 void _tapFeedback() {
   SystemSound.play(SystemSoundType.click);
   HapticFeedback.lightImpact();
 }
 
-/// Hydration multiplier for different drink types â€” coffee/tea/alcohol
+/// Hydration multiplier for different drink types — coffee/tea/alcohol
 /// count for less than their raw volume due to mild diuretic effect;
 /// water and juice count fully.
 const Map<String, double> kDrinkHydrationFactor = {
@@ -31,21 +31,56 @@ const Map<String, double> kDrinkHydrationFactor = {
 };
 
 const Map<String, String> kDrinkEmoji = {
-  'Water': 'ðŸ’§',
-  'Tea': 'ðŸµ',
-  'Coffee': 'â˜•',
-  'Juice': 'ðŸ§ƒ',
-  'Milk': 'ðŸ¥›',
+  'Water': '💧',
+  'Tea': '🍵',
+  'Coffee': '☕',
+  'Juice': '🧃',
+  'Milk': '🥛',
 };
 
 /// Metadata for each unlockable achievement badge.
 const Map<String, Map<String, String>> kBadgeInfo = {
-  'first_drink': {'title': 'First Sip', 'emoji': 'ðŸ’§', 'desc': 'Logged your first drink'},
-  'goal_hit': {'title': 'Goal Crusher', 'emoji': 'ðŸŽ¯', 'desc': 'Hit your daily goal'},
-  'streak_3': {'title': '3-Day Streak', 'emoji': 'ðŸ”¥', 'desc': '3 days in a row'},
-  'streak_7': {'title': 'Week Warrior', 'emoji': 'â­', 'desc': '7 days in a row'},
-  'streak_30': {'title': 'Hydration Hero', 'emoji': 'ðŸ‘‘', 'desc': '30 days in a row'},
+  'first_drink': {'title': 'First Sip', 'emoji': '💧', 'desc': 'Logged your first drink'},
+  'goal_hit': {'title': 'Goal Crusher', 'emoji': '🎯', 'desc': 'Hit your daily goal'},
+  'streak_3': {'title': '3-Day Streak', 'emoji': '🔥', 'desc': '3 days in a row'},
+  'streak_7': {'title': 'Week Warrior', 'emoji': '⭐', 'desc': '7 days in a row'},
+  'streak_30': {'title': 'Hydration Hero', 'emoji': '👑', 'desc': '30 days in a row'},
 };
+
+// ============================================================
+// DRINK LOG MODEL
+// ============================================================
+class DrinkLog {
+  final DateTime timestamp;
+  final int rawAmountMl;
+  final String drinkType;
+  final double hydrationFactor;
+  final int effectiveMl;
+
+  DrinkLog({
+    required this.timestamp,
+    required this.rawAmountMl,
+    required this.drinkType,
+    required this.hydrationFactor,
+    required this.effectiveMl,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'timestamp': timestamp.millisecondsSinceEpoch,
+    'rawAmountMl': rawAmountMl,
+    'drinkType': drinkType,
+    'hydrationFactor': hydrationFactor,
+    'effectiveMl': effectiveMl,
+  };
+
+  factory DrinkLog.fromJson(Map<String, dynamic> json) => DrinkLog(
+    timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp']),
+    rawAmountMl: json['rawAmountMl'],
+    drinkType: json['drinkType'],
+    hydrationFactor: json['hydrationFactor'],
+    effectiveMl: json['effectiveMl'],
+  );
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -171,7 +206,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   /// Simple, commonly-used estimate: ~35 ml per kg for men, ~31 ml per kg
-  /// for women, ~33 ml per kg as a neutral default. Not medical advice â€”
+  /// for women, ~33 ml per kg as a neutral default. Not medical advice —
   /// just a friendlier starting point than a flat 2000 ml for everyone.
   int _calculateGoal() {
     double mlPerKg;
@@ -426,7 +461,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool remindersOn = false;
   TimeOfDay quietStart = const TimeOfDay(hour: 22, minute: 0); // 10 PM
   TimeOfDay quietEnd = const TimeOfDay(hour: 7, minute: 0); // 7 AM
-  final int glassSizeMl = 250;
 
   late AnimationController _celebrateController;
   bool _showCelebration = false;
@@ -436,6 +470,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   DateTime? _lastLogTime;
   List<String> _unlockedBadges = [];
   String? _justUnlockedBadge;
+  List<DrinkLog> _drinkLogs = [];
 
   @override
   void initState() {
@@ -464,48 +499,60 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       remindersOn = prefs.getBool('reminders_on') ?? false;
       quietStart = _decodeTime(prefs.getString('quiet_start'), const TimeOfDay(hour: 22, minute: 0));
       quietEnd = _decodeTime(prefs.getString('quiet_end'), const TimeOfDay(hour: 7, minute: 0));
-      consumedMl = (savedDate == today) ? (prefs.getInt('consumed') ?? 0) : 0;
       _longestStreak = prefs.getInt('longest_streak') ?? 0;
       _unlockedBadges = prefs.getStringList('badges') ?? [];
     });
 
-    if (savedDate != today) {
+    // Load today's logs
+    if (savedDate == today) {
+      final logsJson = prefs.getStringList('logs_$today') ?? [];
+      _drinkLogs = logsJson.map((json) {
+        final parts = json.split('|');
+        return DrinkLog(
+          timestamp: DateTime.fromMillisecondsSinceEpoch(int.parse(parts[0])),
+          rawAmountMl: int.parse(parts[1]),
+          drinkType: parts[2],
+          hydrationFactor: double.parse(parts[3]),
+          effectiveMl: int.parse(parts[4]),
+        );
+      }).toList();
+      consumedMl = _drinkLogs.fold(0, (sum, log) => sum + log.effectiveMl);
+    } else {
+      _drinkLogs = [];
+      consumedMl = 0;
       await prefs.setString('date', today);
       await prefs.setInt('consumed', 0);
+      await prefs.remove('logs_$today');
     }
+
+    await _computeStreak(prefs);
 
     if (remindersOn) {
       await _scheduleReminders(silent: true);
     }
-
-    await _computeStreak(prefs);
   }
 
-  /// Counts consecutive days (ending today) where the logged intake met
-  /// the daily goal, for a simple motivational streak badge.
   Future<void> _computeStreak(SharedPreferences prefs) async {
     int streak = 0;
     final now = DateTime.now();
+    final goal = dailyGoalMl;
+
     for (int i = 0; i < 365; i++) {
       final day = now.subtract(Duration(days: i));
       final key = day.toIso8601String().substring(0, 10);
-      final value = int.tryParse(prefs.getString('history_$key') ?? '') ?? 0;
-      final goalForCheck = dailyGoalMl;
-      if (i == 0) {
-        // Today only counts once the goal has actually been hit so far.
-        if (value >= goalForCheck && goalForCheck > 0) {
-          streak++;
-        } else {
-          break;
-        }
+      
+      final historyStr = prefs.getString('history_$key') ?? '';
+      final parts = historyStr.split(',');
+      final consumed = parts.isNotEmpty ? int.tryParse(parts[0]) ?? 0 : 0;
+      final dayGoal = parts.length > 1 ? int.tryParse(parts[1]) ?? goal : goal;
+      
+      if (consumed >= dayGoal && dayGoal > 0) {
+        streak++;
       } else {
-        if (value >= goalForCheck && goalForCheck > 0) {
-          streak++;
-        } else {
-          break;
-        }
+        break;
       }
     }
+
     if (mounted) setState(() => _streakDays = streak);
     if (streak > _longestStreak) {
       _longestStreak = streak;
@@ -527,6 +574,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Future<void> _saveState() async {
     final prefs = await SharedPreferences.getInstance();
     final today = _todayKey();
+
     await prefs.setString('date', today);
     await prefs.setInt('consumed', consumedMl);
     await prefs.setInt('goal', dailyGoalMl);
@@ -534,7 +582,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     await prefs.setBool('reminders_on', remindersOn);
     await prefs.setString('quiet_start', _encodeTime(quietStart));
     await prefs.setString('quiet_end', _encodeTime(quietEnd));
-    await prefs.setString('history_$today', consumedMl.toString());
+
+    // Save full logs for undo support
+    final logsJson = _drinkLogs.map((log) =>
+      '${log.timestamp.millisecondsSinceEpoch}|'
+      '${log.rawAmountMl}|'
+      '${log.drinkType}|'
+      '${log.hydrationFactor}|'
+      '${log.effectiveMl}'
+    ).toList();
+    await prefs.setStringList('logs_$today', logsJson);
+
+    // Store both consumed AND goal for accurate history
+    await prefs.setString('history_$today', '$consumedMl,$dailyGoalMl');
   }
 
   void _addWater(int amount, {String? drinkType}) {
@@ -544,33 +604,59 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final effectiveAmount = (amount * factor).round();
     final wasBelowGoal = consumedMl < dailyGoalMl;
 
+    // Store the log
+    final log = DrinkLog(
+      timestamp: DateTime.now(),
+      rawAmountMl: amount,
+      drinkType: effectiveDrink,
+      hydrationFactor: factor,
+      effectiveMl: effectiveAmount,
+    );
+
     setState(() {
+      _drinkLogs.add(log);
       consumedMl += effectiveAmount;
       if (consumedMl < 0) consumedMl = 0;
       _lastLogTime = DateTime.now();
     });
-    _saveState();
-    _checkBadges();
 
-    // Adaptive reminders: if a reminder is due to fire in the next 10
-    // minutes, skip that single occurrence since the user just drank.
+    _saveState();
+
+    // Refresh streak BEFORE checking badges
+    _computeStreak(SharedPreferences.getInstance()).then((_) {
+      _checkBadges();
+    });
+
     _skipImminentReminder();
 
-    if (wasBelowGoal && consumedMl >= dailyGoalMl) {
+    if (wasBelowGoal && consumedMl >= dailyGoalMl && dailyGoalMl > 0) {
       _celebrate();
     }
   }
 
-  /// Cancels only the single next scheduled reminder if it would fire
-  /// within 10 minutes of a drink just being logged, then re-schedules
-  /// the rest normally. This avoids nagging right after the user drank.
+  void _undoLastDrink() {
+    if (_drinkLogs.isEmpty) return;
+
+    _tapFeedback();
+    final lastLog = _drinkLogs.removeLast();
+
+    setState(() {
+      consumedMl -= lastLog.effectiveMl;
+      if (consumedMl < 0) consumedMl = 0;
+    });
+
+    _saveState();
+
+    // Recalculate streak after undo
+    _computeStreak(SharedPreferences.getInstance()).then((_) {
+      _checkBadges();
+    });
+  }
+
   Future<void> _skipImminentReminder() async {
     if (!remindersOn) return;
     final pending = await notificationsPlugin.pendingNotificationRequests();
     if (pending.isEmpty) return;
-    // We can't inspect exact fire time from the plugin's pending list
-    // directly, so as a practical approximation we simply push the whole
-    // schedule out by rebuilding it â€” new slots start after "now + gap".
     await _scheduleReminders(silent: true, adaptiveSkipMinutes: 10);
   }
 
@@ -578,9 +664,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final prefs = await SharedPreferences.getInstance();
     final newBadges = <String>[];
 
-    if (!_unlockedBadges.contains('first_drink')) {
+    if (!_unlockedBadges.contains('first_drink') && _drinkLogs.isNotEmpty) {
       newBadges.add('first_drink');
     }
+
     if (_streakDays >= 3 && !_unlockedBadges.contains('streak_3')) {
       newBadges.add('streak_3');
     }
@@ -590,7 +677,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     if (_streakDays >= 30 && !_unlockedBadges.contains('streak_30')) {
       newBadges.add('streak_30');
     }
-    if (consumedMl >= dailyGoalMl && !_unlockedBadges.contains('goal_hit')) {
+    if (consumedMl >= dailyGoalMl && dailyGoalMl > 0 &&
+        !_unlockedBadges.contains('goal_hit')) {
       newBadges.add('goal_hit');
     }
 
@@ -615,7 +703,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     });
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('ðŸŽ‰ Daily goal reached! Great job staying hydrated.'),
+        content: Text('🎉 Daily goal reached! Great job staying hydrated.'),
         duration: Duration(seconds: 3),
       ),
     );
@@ -652,10 +740,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final now = tz.TZDateTime.now(tz.local);
     final earliestAllowed = now.add(Duration(minutes: adaptiveSkipMinutes));
 
-    // Schedule across the next 14 days so reminders keep firing even if the
-    // app isn't reopened daily.
-    for (int dayOffset = 0; dayOffset < 14; dayOffset++) {
+    // Cap at 7 days max to stay under Android's alarm limits
+    const int maxDays = 7;
+    int scheduledCount = 0;
+    const int maxAlarms = 50;
+
+    for (int dayOffset = 0; dayOffset < maxDays && scheduledCount < maxAlarms; dayOffset++) {
       for (final slot in slots) {
+        if (scheduledCount >= maxAlarms) break;
+
         var scheduled = tz.TZDateTime(
           tz.local,
           now.year,
@@ -668,7 +761,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
         await notificationsPlugin.zonedSchedule(
           notifId++,
-          'Time to hydrate! ðŸ’§',
+          'Time to hydrate! 💧',
           'Drink a glass of water to stay on track today.',
           scheduled,
           notificationDetails,
@@ -676,6 +769,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           uiLocalNotificationDateInterpretation:
               UILocalNotificationDateInterpretation.absoluteTime,
         );
+        scheduledCount++;
       }
     }
 
@@ -686,8 +780,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Reminders on â€” every ${reminderIntervalMin}m, quiet from '
-            '${quietStart.format(context)} to ${quietEnd.format(context)} âœ…',
+            'Reminders on — every ${reminderIntervalMin}m, quiet from '
+            '${quietStart.format(context)} to ${quietEnd.format(context)} ✅',
           ),
         ),
       );
@@ -707,7 +801,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final progress = (consumedMl / dailyGoalMl).clamp(0.0, 1.0);
+    // Guard against division by zero
+    final progress = dailyGoalMl > 0
+        ? (consumedMl / dailyGoalMl).clamp(0.0, 1.0)
+        : 0.0;
 
     return Scaffold(
       appBar: AppBar(
@@ -782,7 +879,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text('ðŸ”¥', style: TextStyle(fontSize: 18)),
+                          const Text('🔥', style: TextStyle(fontSize: 18)),
                           const SizedBox(width: 6),
                           Text(
                             '$_streakDays day${_streakDays == 1 ? '' : 's'} streak',
@@ -863,11 +960,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   const SizedBox(height: 16),
                   TextButton(
-                    onPressed: () {
-                      _tapFeedback();
-                      _addWater(-glassSizeMl);
-                    },
-                    child: const Text('Undo last drink'),
+                    onPressed: _drinkLogs.isEmpty ? null : _undoLastDrink,
+                    child: Text(_drinkLogs.isEmpty ? 'Nothing to undo' : 'Undo last drink'),
                   ),
                   const SizedBox(height: 24),
                   Row(
@@ -901,7 +995,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   if (remindersOn) ...[
                     const SizedBox(height: 8),
                     Text(
-                      'Quiet ${quietStart.format(context)} â€“ ${quietEnd.format(context)}',
+                      'Quiet ${quietStart.format(context)} – ${quietEnd.format(context)}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
@@ -937,7 +1031,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
                     child: Row(
                       children: [
-                        const Text('ðŸ†', style: TextStyle(fontSize: 24)),
+                        const Text('🏆', style: TextStyle(fontSize: 24)),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
@@ -1171,7 +1265,7 @@ class _ConfettiPainter extends CustomPainter {
   bool shouldRepaint(covariant _ConfettiPainter oldDelegate) => true;
 }
 
-/// Animated circular "liquid fill" indicator â€” draws a wavy water surface
+/// Animated circular "liquid fill" indicator — draws a wavy water surface
 /// that rises to match progress and gently animates side to side.
 class WaterWaveRing extends StatefulWidget {
   final double progress; // 0..1
@@ -1269,7 +1363,9 @@ class _WavePainter extends CustomPainter {
   bool shouldRepaint(covariant _WavePainter oldDelegate) => true;
 }
 
-
+// ============================================================
+// STATS SCREEN
+// ============================================================
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
 
@@ -1297,7 +1393,9 @@ class _StatsScreenState extends State<StatsScreen> {
     for (int i = 6; i >= 0; i--) {
       final day = now.subtract(Duration(days: i));
       final key = day.toIso8601String().substring(0, 10);
-      final value = int.tryParse(prefs.getString('history_$key') ?? '') ?? 0;
+      final historyStr = prefs.getString('history_$key') ?? '';
+      final parts = historyStr.split(',');
+      final value = parts.isNotEmpty ? int.tryParse(parts[0]) ?? 0 : 0;
       entries.add(MapEntry(_shortWeekday(day.weekday), value));
     }
 
@@ -1400,7 +1498,7 @@ class BadgesScreen extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Text('ðŸ…', style: TextStyle(fontSize: 28)),
+                const Text('🏅', style: TextStyle(fontSize: 28)),
                 const SizedBox(width: 12),
                 Text('Longest streak: $longestStreak days',
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
@@ -1484,7 +1582,9 @@ class _CalendarHeatmapScreenState extends State<CalendarHeatmapScreen> {
     final map = <String, int>{};
     for (final k in keys) {
       final dateStr = k.replaceFirst('history_', '');
-      final value = int.tryParse(prefs.getString(k) ?? '') ?? 0;
+      final historyStr = prefs.getString(k) ?? '';
+      final parts = historyStr.split(',');
+      final value = parts.isNotEmpty ? int.tryParse(parts[0]) ?? 0 : 0;
       map[dateStr] = value;
     }
     setState(() {
