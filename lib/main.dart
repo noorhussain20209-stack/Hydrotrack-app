@@ -52,6 +52,14 @@ Future<void> main() async {
   await _initNotifications();
   _initTimezone();
   runApp(const HydroTrackApp());
+}
+
+Future<void> _initNotifications() async {
+  const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+  const initSettings = InitializationSettings(android: androidSettings);
+  await notificationsPlugin.initialize(initSettings);
+}
+
 void _initTimezone() {
   tzdata.initializeTimeZones();
   final offset = DateTime.now().timeZoneOffset;
@@ -64,20 +72,6 @@ void _initTimezone() {
       const [],
     ),
   );
-}
-  );
-  tz.setLocalLocation(location);
-}
-  tzdata.initializeTimeZones();
-  final offset = DateTime.now().timeZoneOffset;
-  final location = tz.local;
-    'device_local',
-    [0],
-    [offset.inSeconds],
-    [offset.inSeconds],
-    const [],
-  );
-  tz.setLocalLocation(location);
 }
 
 class HydroTrackApp extends StatelessWidget {
