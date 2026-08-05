@@ -52,17 +52,20 @@ Future<void> main() async {
   await _initNotifications();
   _initTimezone();
   runApp(const HydroTrackApp());
-}
-
-Future<void> _initNotifications() async {
-  const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-  const initSettings = InitializationSettings(android: androidSettings);
-  await notificationsPlugin.initialize(initSettings);
-}
-
-/// Sets up the timezone database using the device's current UTC offset,
-/// avoiding the need for a native-timezone-name lookup plugin.
 void _initTimezone() {
+  tzdata.initializeTimeZones();
+  final offset = DateTime.now().timeZoneOffset;
+  final location = tz.local; 
+  // 👇 CHANGE: Add 'tz.Location(' here
+  location = tz.Location(
+    'device_local',
+    [0],
+    [offset.inSeconds],
+    [offset.inSeconds],
+    const [],
+  );
+  tz.setLocalLocation(location);
+}
   tzdata.initializeTimeZones();
   final offset = DateTime.now().timeZoneOffset;
   final location = tz.local;
