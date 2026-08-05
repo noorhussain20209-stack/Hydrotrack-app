@@ -52,21 +52,21 @@ Future<void> main() async {
   await _initNotifications();
   _initTimezone();
   runApp(const HydroTrackApp());
-}
-
-Future<void> _initNotifications() async {
-  const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-  const initSettings = InitializationSettings(android: androidSettings);
-  await notificationsPlugin.initialize(initSettings);
-}
-
-void _initTimezone() {
+    void _initTimezone() {
   tzdata.initializeTimeZones();
   final offset = DateTime.now().timeZoneOffset;
-  tz.setLocalLocation(
-    tz.Location(
-      'device_local',
+  
+  final location = tz.Location(
+    'device_local',
+    [offset.inSeconds],
+    [offset.inSeconds],
+    [],
+  );
+  
+  tz.setLocalLocation(location);
+    }
       [0],
+
       [offset.inSeconds],
       [offset.inSeconds],
       const [],
