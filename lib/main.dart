@@ -37,38 +37,7 @@ const Map<String, String> kDrinkEmoji = {
   'Juice': 'ðŸ§ƒ',
   'Milk': 'ðŸ¥›',
 };
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await _initNotifications();
-  _initTimezone();
-  runApp(const HydroTrackApp());
-}
 
-Future<void> _initNotifications() async {
-  const AndroidInitializationSettings androidSettings =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
-  const DarwinInitializationSettings iosSettings =
-      DarwinInitializationSettings();
-  const InitializationSettings settings = InitializationSettings(
-    android: androidSettings,
-    iOS: iosSettings,
-  );
-  await notificationsPlugin.initialize(settings);
-}
-
-void _initTimezone() {
-  tzdata.initializeTimeZones();
-  final offset = DateTime.now().timeZoneOffset;
-  
-  final location = tz.Location(
-    'device_local',
-    [offset.inSeconds],
-    [offset.inSeconds],
-    [],
-  );
-  
-  tz.setLocalLocation(location);
-}
 /// Metadata for each unlockable achievement badge.
 const Map<String, Map<String, String>> kBadgeInfo = {
   'first_drink': {'title': 'First Sip', 'emoji': 'ðŸ’§', 'desc': 'Logged your first drink'},
@@ -83,43 +52,32 @@ Future<void> main() async {
   await _initNotifications();
   _initTimezone();
   runApp(const HydroTrackApp());
-    void _initTimezone() {
-  tzdata.initializeTimeZones();
-  final offset = DateTime.now().timeZoneOffset;
-  
-  final location = tz.Location(
-    'device_local',
-    [offset.inSeconds],
-    [offset.inSeconds],
-    [],
-  );
-  
-  tz.setLocalLocation(location);
-    }
-      [0],
+}
 
-      [offset.inSeconds],
-      [offset.inSeconds],
-      Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await _initNotifications();
-  _initTimezone();
-  runApp(const HydroTrackApp());
+Future<void> _initNotifications() async {
+  const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+  const initSettings = InitializationSettings(android: androidSettings);
+  await notificationsPlugin.initialize(initSettings);
 }
 
 void _initTimezone() {
   tzdata.initializeTimeZones();
   final offset = DateTime.now().timeZoneOffset;
-  
-  final location = tz.Location(
-    'device_local',
-    [offset.inSeconds],
-    [offset.inSeconds],
-    [],
+  tz.setLocalLocation(
+    tz.Location(
+      'device_local',
+      [0],
+      [offset.inSeconds],
+      [offset.inSeconds],
+      const [],
+    ),
   );
-  
-  tz.setLocalLocation(location);
 }
+
+class HydroTrackApp extends StatelessWidget {
+  const HydroTrackApp({super.key});
+
+  @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: themeModeNotifier,
@@ -1652,3 +1610,4 @@ class _CalendarHeatmapScreenState extends State<CalendarHeatmapScreen> {
     return names[month - 1];
   }
 }
+             
