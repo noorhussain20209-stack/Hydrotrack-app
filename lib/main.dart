@@ -55,14 +55,16 @@ Future<void> main() async {
 void _initTimezone() {
   tzdata.initializeTimeZones();
   final offset = DateTime.now().timeZoneOffset;
-  final location = tz.local; 
-  // 👇 CHANGE: Add 'tz.Location(' here
-  location = tz.Location(
-    'device_local',
-    [0],
-    [offset.inSeconds],
-    [offset.inSeconds],
-    const [],
+  tz.setLocalLocation(
+    tz.Location(
+      'device_local',
+      [0],
+      [offset.inSeconds],
+      [offset.inSeconds],
+      const [],
+    ),
+  );
+}
   );
   tz.setLocalLocation(location);
 }
