@@ -1,7 +1,7 @@
 name: hydrotrack
-description: "Simple daily water intake reminder app."
+description: A smart hydration tracking app with reminders and achievements
 publish_to: 'none'
-version: 3.0.0+3
+version: 1.0.0+1
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -9,15 +9,33 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  
+  # Local storage for saving data
   shared_preferences: ^2.2.2
+  
+  # Notifications
   flutter_local_notifications: ^17.0.0
-  cupertino_icons: ^1.0.6
+  
+  # Timezone handling for scheduled notifications
   timezone: ^0.9.2
+  
+  # ✅ PERMISSION HANDLER - For notification permissions
+  permission_handler: ^11.0.1
+  
+  # Material icons
+  cupertino_icons: ^1.0.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  
+  # Lint rules
   flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
+  
+  # If you have assets (images, fonts) add them here:
+  # assets:
+  #   - assets/images/
+  #   - assets/fonts/
