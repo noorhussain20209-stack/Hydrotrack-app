@@ -179,10 +179,9 @@ Future<void> _initTimezone() async {
     tzdata.initializeTimeZones();
     final offset = DateTime.now().timeZoneOffset;
     tz.setLocalLocation(
-tz.setLocalLocation(
   tz.Location(
     'device_local',
-    [-9223372036854775808], // "always applies from here"
+    [-9223372036854775808],
     [0],
     [tz.TimeZone(offset.inSeconds, isDst: false, abbreviation: 'LOC')],
   ),
