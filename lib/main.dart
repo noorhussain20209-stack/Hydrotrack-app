@@ -179,14 +179,14 @@ Future<void> _initTimezone() async {
     tzdata.initializeTimeZones();
     final offset = DateTime.now().timeZoneOffset;
     tz.setLocalLocation(
-      tz.Location(
-        'device_local',
-        [0],
-        [offset.inSeconds],
-        [offset.inSeconds],
-        const [],
-      ),
-    );
+tz.setLocalLocation(
+  tz.Location(
+    'device_local',
+    [-9223372036854775808], // "always applies from here"
+    [0],
+    [tz.TimeZone(offset.inSeconds, isDst: false, abbreviation: 'LOC')],
+  ),
+);
   } catch (e) {
     // Fallback to UTC if timezone fails
     print('⚠️ Timezone initialization error, using UTC: $e');
