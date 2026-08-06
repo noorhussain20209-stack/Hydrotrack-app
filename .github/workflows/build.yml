@@ -24,42 +24,41 @@ jobs:
           flutter-version: '3.16.0'
           channel: 'stable'
       
-      - name: Create Android folder structure
+      - name: Create Complete Android Project
         run: |
+          # Create directories
           mkdir -p android/app/src/main/java/com/example/hydrotrack
           mkdir -p android/app/src/main/res/drawable
-          mkdir -p android/app/src/main/res/values
           mkdir -p android/app/src/main/res/mipmap-hdpi
           mkdir -p android/app/src/main/res/mipmap-mdpi
           mkdir -p android/app/src/main/res/mipmap-xhdpi
           mkdir -p android/app/src/main/res/mipmap-xxhdpi
           mkdir -p android/app/src/main/res/mipmap-xxxhdpi
-      
-      - name: Create AndroidManifest.xml
-        run: |
+          mkdir -p android/gradle/wrapper
+          
+          # Create AndroidManifest.xml
           cat > android/app/src/main/AndroidManifest.xml << 'EOF'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android"
               package="com.example.hydrotrack">
               
               <uses-permission android:name="android.permission.INTERNET"/>
               <uses-permission android:name="android.permission.VIBRATE"/>
-              <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
               <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
               
               <application
                   android:label="HydroTrack"
                   android:icon="@mipmap/ic_launcher"
                   android:allowBackup="true"
-                  android:theme="@style/Theme.AppCompat.Light">
+                  android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
                   
                   <meta-data
                       android:name="flutter_local_notifications"
                       android:value="true"/>
                   
                   <activity
-                      android:name=".MainActivity"
+                      android:name="io.flutter.embedding.android.FlutterActivity"
                       android:exported="true"
-                      android:theme="@style/Theme.AppCompat.Light">
+                      android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN"/>
                           <category android:name="android.intent.category.LAUNCHER"/>
@@ -68,73 +67,50 @@ jobs:
               </application>
           </manifest>
           EOF
-      
-      - name: Create MainActivity
-        run: |
+          
+          # Create MainActivity
           cat > android/app/src/main/java/com/example/hydrotrack/MainActivity.kt << 'EOF'
           package com.example.hydrotrack
           
           import io.flutter.embedding.android.FlutterActivity
           
-          class MainActivity: FlutterActivity()
+          class MainActivity : FlutterActivity()
           EOF
-      
-      - name: Create build.gradle
-        run: |
+          
+          # Create app/build.gradle
           cat > android/app/build.gradle << 'EOF'
-          def localProperties = new Properties()
-          def localPropertiesFile = rootProject.file('local.properties')
-          if (localPropertiesFile.exists()) {
-              localPropertiesFile.withReader('UTF-8') { reader ->
-                  localProperties.load(reader)
-              }
+          plugins {
+              id "com.android.application"
+              id "kotlin-android"
+              id "dev.flutter.flutter-gradle-plugin"
           }
-          
-          def flutterRoot = localProperties.getProperty('flutter.sdk')
-          if (flutterRoot == null) {
-              throw new GradleException("Flutter SDK not found")
-          }
-          
-          def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
-          if (flutterVersionCode == null) {
-              flutterVersionCode = '1'
-          }
-          
-          def flutterVersionName = localProperties.getProperty('flutter.versionName')
-          if (flutterVersionName == null) {
-              flutterVersionName = '1.0'
-          }
-          
-          apply plugin: 'com.android.application'
-          apply plugin: 'kotlin-android'
-          apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
           
           android {
-              compileSdkVersion 34
+              compileSdk 34
               ndkVersion flutter.ndkVersion
-          
+              
               compileOptions {
                   sourceCompatibility JavaVersion.VERSION_1_8
                   targetCompatibility JavaVersion.VERSION_1_8
               }
-          
+              
               kotlinOptions {
                   jvmTarget = '1.8'
               }
-          
+              
               sourceSets {
                   main.java.srcDirs += 'src/main/kotlin'
               }
-          
+              
               defaultConfig {
                   applicationId "com.example.hydrotrack"
-                  minSdkVersion 21
-                  targetSdkVersion 34
-                  versionCode flutterVersionCode.toInteger()
-                  versionName flutterVersionName
+                  minSdk 21
+                  targetSdk 34
+                  versionCode 1
+                  versionName "1.0.0"
                   multiDexEnabled true
               }
-          
+              
               buildTypes {
                   release {
                       signingConfig signingConfigs.debug
@@ -148,11 +124,11 @@ jobs:
           
           dependencies {
               implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+              implementation 'androidx.multidex:multidex:2.0.1'
           }
           EOF
-      
-      - name: Create root build.gradle
-        run: |
+          
+          # Create root build.gradle
           cat > android/build.gradle << 'EOF'
           buildscript {
               ext.kotlin_version = '1.9.0'
@@ -160,7 +136,7 @@ jobs:
                   google()
                   mavenCentral()
               }
-          
+              
               dependencies {
                   classpath 'com.android.tools.build:gradle:7.4.2'
                   classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
@@ -186,35 +162,78 @@ jobs:
               delete rootProject.buildDir
           }
           EOF
-      
-      - name: Create settings.gradle
-        run: |
+          
+          # Create settings.gradle
           cat > android/settings.gradle << 'EOF'
-          include ':app'
+          pluginManagement {
+              def flutterSdkPath = {
+                  def properties = new Properties()
+                  file("local.properties").withInputStream { properties.load(it) }
+                  def flutterSdkPath = properties.getProperty("flutter.sdk")
+                  assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
+                  return flutterSdkPath
+              }()
+              includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
+              
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
           
-          def localPropertiesFile = new File(rootProject.projectDir, "local.properties")
-          def properties = new Properties()
+          plugins {
+              id "dev.flutter.flutter-plugin-loader" version "1.0.0"
+              id "com.android.application" version "7.4.2" apply false
+              id "org.jetbrains.kotlin.android" version "1.9.0" apply false
+          }
           
-          assert localPropertiesFile.exists()
-          localPropertiesFile.withReader("UTF-8") { reader -> properties.load(reader) }
-          
-          def flutterSdkPath = properties.getProperty("flutter.sdk")
-          assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
-          apply from: "$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gradle"
+          include ":app"
           EOF
-      
-      - name: Create gradle.properties
-        run: |
+          
+          # Create gradle.properties
           cat > android/gradle.properties << 'EOF'
           org.gradle.jvmargs=-Xmx4G
           android.useAndroidX=true
           android.enableJetifier=true
           EOF
-      
-      - name: Create local.properties
-        run: |
+          
+          # Create gradle-wrapper.properties
+          cat > android/gradle/wrapper/gradle-wrapper.properties << 'EOF'
+          distributionBase=GRADLE_USER_HOME
+          distributionPath=wrapper/dists
+          distributionUrl=https\://services.gradle.org/distributions/gradle-7.5-bin.zip
+          zipStoreBase=GRADLE_USER_HOME
+          zipStorePath=wrapper/dists
+          EOF
+          
+          # Create local.properties
           echo "flutter.sdk=$HOME/flutter" > android/local.properties
           echo "sdk.dir=$HOME/Android/Sdk" >> android/local.properties
+          
+          # Create empty ic_launcher files (placeholder)
+          echo '<vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="192dp"
+              android:height="192dp"
+              android:viewportWidth="192"
+              android:viewportHeight="192">
+            <path
+                android:pathData="M96,15C96,15 30,70 30,120C30,156.5 59.5,186 96,186C132.5,186 162,156.5 162,120C162,70 96,15 96,15Z"
+                android:fillColor="#2979FF"/>
+            <path
+                android:pathData="M96,58L96,122M96,58C78,78 78,102 96,122M96,58C114,78 114,102 96,122"
+                android:strokeColor="#FFFFFF"
+                android:strokeWidth="6"
+                android:fillColor="#00000000"
+                android:strokeLineCap="round"/>
+          </vector>' > android/app/src/main/res/drawable/ic_launcher.xml
+          
+          # Copy for all mipmap folders
+          cp android/app/src/main/res/drawable/ic_launcher.xml android/app/src/main/res/mipmap-hdpi/ic_launcher.xml
+          cp android/app/src/main/res/drawable/ic_launcher.xml android/app/src/main/res/mipmap-mdpi/ic_launcher.xml
+          cp android/app/src/main/res/drawable/ic_launcher.xml android/app/src/main/res/mipmap-xhdpi/ic_launcher.xml
+          cp android/app/src/main/res/drawable/ic_launcher.xml android/app/src/main/res/mipmap-xxhdpi/ic_launcher.xml
+          cp android/app/src/main/res/drawable/ic_launcher.xml android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.xml
       
       - name: Get dependencies
         run: flutter pub get
