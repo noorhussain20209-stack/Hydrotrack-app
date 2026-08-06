@@ -8,44 +8,222 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    
     steps:
       - uses: actions/checkout@v4
-
-      - uses: subosito/flutter-action@v2
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
-          flutter-version: '3.24.0'
+          distribution: 'zulu'
+          java-version: '17'
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.16.0'
           channel: 'stable'
-
-      # Generate the full Flutter project skeleton (android/, ios/, etc.)
-      # in a fresh folder, since we only keep the app's own code in this repo.
-      - name: Scaffold Flutter project
-        run: flutter create --platforms=android scaffold
-
-      # Drop our actual app code into the freshly scaffolded project,
-      # overwriting the placeholder files it generated.
-      - name: Copy app code into scaffold
+      
+      - name: Create Android folder structure
         run: |
-          cp pubspec.yaml scaffold/pubspec.yaml
-          cp lib/main.dart scaffold/lib/main.dart
-
-      - name: Fix Kotlin version placeholder bug
+          mkdir -p android/app/src/main/java/com/example/hydrotrack
+          mkdir -p android/app/src/main/res/drawable
+          mkdir -p android/app/src/main/res/values
+          mkdir -p android/app/src/main/res/mipmap-hdpi
+          mkdir -p android/app/src/main/res/mipmap-mdpi
+          mkdir -p android/app/src/main/res/mipmap-xhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+      
+      - name: Create AndroidManifest.xml
         run: |
-          sed -i "s/<latest-version>/1.9.22/" scaffold/android/build.gradle 2>/dev/null || true
-          sed -i "s/<latest-version>/1.9.22/" scaffold/android/settings.gradle 2>/dev/null || true
-          sed -i 's/id "org.jetbrains.kotlin.android" version "1.7.10"/id "org.jetbrains.kotlin.android" version "1.9.22"/' scaffold/android/settings.gradle 2>/dev/null || true
-
-      - name: Fix app display name
-        run: sed -i 's/android:label="scaffold"/android:label="HydroTrack"/' scaffold/android/app/src/main/AndroidManifest.xml
-
+          cat > android/app/src/main/AndroidManifest.xml << 'EOF'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+              package="com.example.hydrotrack">
+              
+              <uses-permission android:name="android.permission.INTERNET"/>
+              <uses-permission android:name="android.permission.VIBRATE"/>
+              <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+              <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+              
+              <application
+                  android:label="HydroTrack"
+                  android:icon="@mipmap/ic_launcher"
+                  android:allowBackup="true"
+                  android:theme="@style/Theme.AppCompat.Light">
+                  
+                  <meta-data
+                      android:name="flutter_local_notifications"
+                      android:value="true"/>
+                  
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:theme="@style/Theme.AppCompat.Light">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LAUNCHER"/>
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+      
+      - name: Create MainActivity
+        run: |
+          cat > android/app/src/main/java/com/example/hydrotrack/MainActivity.kt << 'EOF'
+          package com.example.hydrotrack
+          
+          import io.flutter.embedding.android.FlutterActivity
+          
+          class MainActivity: FlutterActivity()
+          EOF
+      
+      - name: Create build.gradle
+        run: |
+          cat > android/app/build.gradle << 'EOF'
+          def localProperties = new Properties()
+          def localPropertiesFile = rootProject.file('local.properties')
+          if (localPropertiesFile.exists()) {
+              localPropertiesFile.withReader('UTF-8') { reader ->
+                  localProperties.load(reader)
+              }
+          }
+          
+          def flutterRoot = localProperties.getProperty('flutter.sdk')
+          if (flutterRoot == null) {
+              throw new GradleException("Flutter SDK not found")
+          }
+          
+          def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+          if (flutterVersionCode == null) {
+              flutterVersionCode = '1'
+          }
+          
+          def flutterVersionName = localProperties.getProperty('flutter.versionName')
+          if (flutterVersionName == null) {
+              flutterVersionName = '1.0'
+          }
+          
+          apply plugin: 'com.android.application'
+          apply plugin: 'kotlin-android'
+          apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
+          
+          android {
+              compileSdkVersion 34
+              ndkVersion flutter.ndkVersion
+          
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_1_8
+                  targetCompatibility JavaVersion.VERSION_1_8
+              }
+          
+              kotlinOptions {
+                  jvmTarget = '1.8'
+              }
+          
+              sourceSets {
+                  main.java.srcDirs += 'src/main/kotlin'
+              }
+          
+              defaultConfig {
+                  applicationId "com.example.hydrotrack"
+                  minSdkVersion 21
+                  targetSdkVersion 34
+                  versionCode flutterVersionCode.toInteger()
+                  versionName flutterVersionName
+                  multiDexEnabled true
+              }
+          
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.debug
+                  }
+              }
+          }
+          
+          flutter {
+              source '../..'
+          }
+          
+          dependencies {
+              implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+          }
+          EOF
+      
+      - name: Create root build.gradle
+        run: |
+          cat > android/build.gradle << 'EOF'
+          buildscript {
+              ext.kotlin_version = '1.9.0'
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          
+              dependencies {
+                  classpath 'com.android.tools.build:gradle:7.4.2'
+                  classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+              }
+          }
+          
+          allprojects {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          
+          rootProject.buildDir = '../build'
+          subprojects {
+              project.buildDir = "${rootProject.buildDir}/${project.name}"
+          }
+          subprojects {
+              project.evaluationDependsOn(':app')
+          }
+          
+          tasks.register('clean', Delete) {
+              delete rootProject.buildDir
+          }
+          EOF
+      
+      - name: Create settings.gradle
+        run: |
+          cat > android/settings.gradle << 'EOF'
+          include ':app'
+          
+          def localPropertiesFile = new File(rootProject.projectDir, "local.properties")
+          def properties = new Properties()
+          
+          assert localPropertiesFile.exists()
+          localPropertiesFile.withReader("UTF-8") { reader -> properties.load(reader) }
+          
+          def flutterSdkPath = properties.getProperty("flutter.sdk")
+          assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
+          apply from: "$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gradle"
+          EOF
+      
+      - name: Create gradle.properties
+        run: |
+          cat > android/gradle.properties << 'EOF'
+          org.gradle.jvmargs=-Xmx4G
+          android.useAndroidX=true
+          android.enableJetifier=true
+          EOF
+      
+      - name: Create local.properties
+        run: |
+          echo "flutter.sdk=$HOME/flutter" > android/local.properties
+          echo "sdk.dir=$HOME/Android/Sdk" >> android/local.properties
+      
       - name: Get dependencies
-        working-directory: scaffold
         run: flutter pub get
-
+      
       - name: Build APK
-        working-directory: scaffold
         run: flutter build apk --release
-
-      - uses: actions/upload-artifact@v4
+      
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          name: hydrotrack-release-apk
-          path: scaffold/build/app/outputs/flutter-apk/app-release.apk
+          name: HydroTrack-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
