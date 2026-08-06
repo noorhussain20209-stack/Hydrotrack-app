@@ -1788,8 +1788,9 @@ class BadgesScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: isUnlocked
-                    ? Colors.amber.withOpacity(0.15)
-                    : Theme.of(context).colorScheme.surfaceContainerHighest,
+                color: isUnlocked
+    ? Colors.amber.withOpacity(0.15)
+    : Theme.of(context).colorScheme.surfaceVariant,
                 borderRadius: BorderRadius.circular(16),
                 border: isUnlocked
                     ? Border.all(color: Colors.amber, width: 1.5)
