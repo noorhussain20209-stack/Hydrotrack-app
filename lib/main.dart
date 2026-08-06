@@ -770,9 +770,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     _saveState();
 
-    _computeStreak(SharedPreferences.getInstance()).then((_) {
-      _checkBadges();
-    });
+    // ✅ Correct:
+SharedPreferences.getInstance().then((prefs) async {
+  await _computeStreak(prefs);
+  _checkBadges();
+});
 
     _skipImminentReminder();
 
@@ -796,10 +798,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     });
 
     _saveState();
-    _computeStreak(SharedPreferences.getInstance()).then((_) {
-      _checkBadges();
-    });
-  }
+  // ✅ Correct:
+SharedPreferences.getInstance().then((prefs) async {
+  await _computeStreak(prefs);
+  _checkBadges();
+});  
+
 
   // ============================================================
   // REMINDER METHODS
