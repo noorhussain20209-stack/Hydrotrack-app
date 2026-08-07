@@ -354,121 +354,124 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     ),
                   ],
                 ),
-                const SizedBox(height: 36),
-                Text('Your weight', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 8),
-                Text(
-                  '${_weightKg.round()} kg',
-                  style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-                ),
-                Slider(
-                  value: _weightKg,
-                  min: 30,
-                   max :   500,
-                  divisions: 120,
-                  label: '${_weightKg.round()} kg',
-                  onChanged: (v) => setState(() => _weightKg = v),
-                ),
-                const SizedBox(height: 20),
-                Text('Your age', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 8),
-                Text(
-                  '${_age.round()} yrs',
-                  style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-                ),
-                Slider(
-                  value: _age,
-                  min: 10,
-                  max: 90,
-                  divisions: 80,
-                  label: '${_age.round()} yrs',
-                  onChanged: (v) => setState(() => _age = v),
-                ),
-                const SizedBox(height: 32),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(20),
+                Widget build(BuildContext context) {
+    final canContinue = _gender != null;
+    return Scaffold(
+      body: SafeArea(
+        child: FadeTransition(
+          opacity: _animController,
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(28.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 20),
+                  const _WaterDropLogo(size: 90),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Let\'s personalize\nyour goal',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold),
                   ),
-                  child: Row(
+                  const SizedBox(height: 36),
+                  Text('I am...', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 12),
+                  Row(
                     children: [
-                      const Icon(Icons.water_drop_rounded),
+                      _GenderCard(
+                        label: 'Male',
+                        icon: Icons.male_rounded,
+                        selected: _gender == 'male',
+                        onTap: () => setState(() => _gender = 'male'),
+                      ),
                       const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          canContinue
-                              ? 'Your suggested goal: ${_calculateGoal()} ml/day'
-                              : 'Pick an option above to see your goal',
-                        ),
+                      _GenderCard(
+                        label: 'Female',
+                        icon: Icons.female_rounded,
+                        selected: _gender == 'female',
+                        onTap: () => setState(() => _gender = 'female'),
+                      ),
+                      const SizedBox(width: 12),
+                      _GenderCard(
+                        label: 'Other',
+                        icon: Icons.person_rounded,
+                        selected: _gender == 'other',
+                        onTap: () => setState(() => _gender = 'other'),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  height: 54,
-                  child: ElevatedButton(
-                    onPressed: canContinue ? _finishOnboarding : null,
-                    child: const Text('Get Started', style: TextStyle(fontSize: 16)),
+                  const SizedBox(height: 36),
+                  Text('Your weight', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${_weightKg.round()} kg',
+                    style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
                   ),
-                ),
-              ],
+                  Slider(
+                    value: _weightKg,
+                    min: 30,
+                    max: 150,
+                    divisions: 120,
+                    label: '${_weightKg.round()} kg',
+                    onChanged: (v) => setState(() => _weightKg = v),
+                  ),
+                  const SizedBox(height: 20),
+                  Text('Your age', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${_age.round()} yrs',
+                    style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+                  ),
+                  Slider(
+                    value: _age,
+                    min: 10,
+                    max: 90,
+                    divisions: 80,
+                    label: '${_age.round()} yrs',
+                    onChanged: (v) => setState(() => _age = v),
+                  ),
+                  const SizedBox(height: 32),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.water_drop_rounded),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            canContinue
+                                ? 'Your suggested goal: ${_calculateGoal()} ml/day'
+                                : 'Pick an option above to see your goal',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 54,
+                    child: ElevatedButton(
+                      onPressed: canContinue ? _finishOnboarding : null,
+                      child: const Text('Get Started', style: TextStyle(fontSize: 16)),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
-}
-
-class _GenderCard extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _GenderCard({
-    required this.label,
-    required this.icon,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(vertical: 18),
-          decoration: BoxDecoration(
-            color: selected ? color.withOpacity(0.15) : null,
-            border: Border.all(
-              color: selected ? color : Colors.grey.withOpacity(0.3),
-              width: selected ? 2 : 1,
-            ),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, color: selected ? color : Colors.grey, size: 30),
-              const SizedBox(height: 6),
-              Text(label,
-                  style: TextStyle(
-                      color: selected ? color : Colors.grey,
-                      fontWeight: FontWeight.w600)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+                  }
 
 class _WaterDropLogo extends StatelessWidget {
   final double size;
