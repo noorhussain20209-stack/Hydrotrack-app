@@ -364,7 +364,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 Slider(
                   value: _weightKg,
                   min: 30,
-                  max: 150,
+                   max :   500,
                   divisions: 120,
                   label: '${_weightKg.round()} kg',
                   onChanged: (v) => setState(() => _weightKg = v),
@@ -384,7 +384,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   label: '${_age.round()} yrs',
                   onChanged: (v) => setState(() => _age = v),
                 ),
-                const Spacer(),
+                const SizedBox(height: 32),
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   padding: const EdgeInsets.all(16),
@@ -1020,11 +1020,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       body: Stack(
         children: [
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+            child: SingleChildScrollView(
+  child: Padding(
+    padding: const EdgeInsets.all(28.0),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
                   if (_streakDays > 0)
                     Container(
                       margin: const EdgeInsets.only(bottom: 16),
