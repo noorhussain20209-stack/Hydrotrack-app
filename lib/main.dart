@@ -103,6 +103,7 @@ Future<void> _requestNotificationPermission() async {
     print('Notification permission not available: $e');
   }
 }
+
 Future<void> _initNotifications() async {
   try {
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -162,7 +163,7 @@ Future<void> _initTimezone() async {
 }
 
 class HydroTrackApp extends StatelessWidget {
-  const HydroTrackApp({super.key});
+  const HydroTrackApp({super.key});const HydroTrackApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -174,12 +175,12 @@ class HydroTrackApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           themeMode: mode,
           theme: ThemeData(
-            colorSchemeSeed: const Color(0xFF2979FF),
+            colorSchemeSeed: const Color(0xFF06B6D4),
             useMaterial3: true,
             brightness: Brightness.light,
           ),
           darkTheme: ThemeData(
-            colorSchemeSeed: const Color(0xFF2979FF),
+            colorSchemeSeed: const Color(0xFF06B6D4),
             useMaterial3: true,
             brightness: Brightness.dark,
           ),
@@ -306,58 +307,21 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         );
       }
     }
-  }@override
+  }
+
+  @override
   Widget build(BuildContext context) {
     final canContinue = _gender != null;
     return Scaffold(
-      body: SafeArea(
-        child: FadeTransition(
-          opacity: _animController,
-          child: Padding(
-            padding: const EdgeInsets.all(28.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 20),
-                const _WaterDropLogo(size: 90),
-                const SizedBox(height: 24),
-                Text(
-                  'Let\'s personalize\nyour goal',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 36),
-                Text('I am...', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    _GenderCard(
-                      label: 'Male',
-                      icon: Icons.male_rounded,
-                      selected: _gender == 'male',
-                      onTap: () => setState(() => _gender = 'male'),
-                    ),
-                    const SizedBox(width: 12),
-                    _GenderCard(
-                      label: 'Female',
-                      icon: Icons.female_rounded,
-                      selected: _gender == 'female',
-                      onTap: () => setState(() => _gender = 'female'),
-                    ),
-                    const SizedBox(width: 12),
-                    _GenderCard(
-                      label: 'Other',
-                      icon: Icons.person_rounded,
-                      selected: _gender == 'other',
-                      onTap: () => setState(() => _gender = 'other'),
-                    ),
-                  ],
-                ),
-                Widget build(BuildContext context) {
-    final canContinue = _gender != null;
-    return Scaffold(
-      body: SafeArea(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFE0F7FA), Color(0xFFFFFFFF)],
+          ),
+        ),
+        child: SafeArea(
         child: FadeTransition(
           opacity: _animController,
           child: SingleChildScrollView(
@@ -412,8 +376,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   Slider(
                     value: _weightKg,
                     min: 30,
-                    max: 150,
-                    divisions: 120,
+                    max: 500,
+                    divisions: 470,
                     label: '${_weightKg.round()} kg',
                     onChanged: (v) => setState(() => _weightKg = v),
                   ),
@@ -427,8 +391,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   Slider(
                     value: _age,
                     min: 10,
-                    max: 90,
-                    divisions: 80,
+                    max: 150,
+                    divisions: 140,
                     label: '${_age.round()} yrs',
                     onChanged: (v) => setState(() => _age = v),
                   ),
@@ -468,10 +432,58 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             ),
           ),
         ),
+        ),
+      ),
+    );
+  }}
+}
+
+class _GenderCard extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _GenderCard({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          decoration: BoxDecoration(
+            color: selected ? color.withOpacity(0.15) : null,
+            border: Border.all(
+              color: selected ? color : Colors.grey.withOpacity(0.3),
+              width: selected ? 2 : 1,
+            ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, color: selected ? color : Colors.grey, size: 30),
+              const SizedBox(height: 6),
+              Text(label,
+                  style: TextStyle(
+                      color: selected ? color : Colors.grey,
+                      fontWeight: FontWeight.w600)),
+            ],
+          ),
+        ),
       ),
     );
   }
-                  }
+}
 
 class _WaterDropLogo extends StatelessWidget {
   final double size;
@@ -813,7 +825,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       const int maxAlarms = 50;
 
       for (int dayOffset = 0; dayOffset < maxDays && scheduledCount < maxAlarms; dayOffset++) {
-        for (final slot in slots) {
+        for (final slot in slots) {for (final slot in slots) {
           if (scheduledCount >= maxAlarms) break;
 
           var scheduled = tz.TZDateTime(
@@ -833,10 +845,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             scheduled,
             notificationDetails,
             androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-            uiLocalNotificationDateInterpretation:
-                UILocalNotificationDateInterpretation.absoluteTime,
           );
-    
           scheduledCount++;
         }
       }
@@ -887,6 +896,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (!_unlockedBadges.contains('first_drink') && _drinkLogs.isNotEmpty) {
         newBadges.add('first_drink');
       }
+
       if (_streakDays >= 3 && !_unlockedBadges.contains('streak_3')) {
         newBadges.add('streak_3');
       }
@@ -919,7 +929,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void _celebrate() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await _computeStreak(prefs);setState(() => _showCelebration = true);
+      await _computeStreak(prefs);
+      setState(() => _showCelebration = true);
       _celebrateController.forward(from: 0).then((_) {
         if (mounted) setState(() => _showCelebration = false);
       });
@@ -962,9 +973,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         : 0.0;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('HydroTrack'),
+        title: const Text('HydroTrack',
+            style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.5)),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                Colors.transparent,
+              ],
+            ),
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_active_rounded),
@@ -1022,13 +1049,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
       body: Stack(
         children: [
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                  Theme.of(context).scaffoldBackgroundColor,
+                ],
+              ),
+            ),
+          ),
           SafeArea(
-            child: SingleChildScrollView(
-  child: Padding(
-    padding: const EdgeInsets.all(28.0),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
                   if (_streakDays > 0)
                     Container(
                       margin: const EdgeInsets.only(bottom: 16),
@@ -1278,7 +1316,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 left: 24,
                 right: 24,
                 top: 24,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,bottom: MediaQuery.of(context).viewInsets.bottom + 24,
               ),
               child: SingleChildScrollView(
                 child: Column(
@@ -1368,7 +1406,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             await _scheduleReminders(silent: true);
                           }
                           if (context.mounted) Navigator.pop(context);
-                        },child: const Text('Save'),
+                        },
+                        child: const Text('Save'),
                       ),
                     ),
                   ],
