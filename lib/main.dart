@@ -22,19 +22,19 @@ const Map<String, double> kDrinkHydrationFactor = {
 };
 
 const Map<String, String> kDrinkEmoji = {
-  'Water': '💧',
-  'Tea': '🍵',
-  'Coffee': '☕',
-  'Juice': '🧃',
-  'Milk': '🥛',
+  'Water': 'ðŸ’§',
+  'Tea': 'ðŸµ',
+  'Coffee': 'â˜•',
+  'Juice': 'ðŸ§ƒ',
+  'Milk': 'ðŸ¥›',
 };
 
 const Map<String, Map<String, String>> kBadgeInfo = {
-  'first_drink': {'title': 'First Sip', 'emoji': '💧', 'desc': 'Logged your first drink'},
-  'goal_hit': {'title': 'Goal Crusher', 'emoji': '🎯', 'desc': 'Hit your daily goal'},
-  'streak_3': {'title': '3-Day Streak', 'emoji': '🔥', 'desc': '3 days in a row'},
-  'streak_7': {'title': 'Week Warrior', 'emoji': '⭐', 'desc': '7 days in a row'},
-  'streak_30': {'title': 'Hydration Hero', 'emoji': '👑', 'desc': '30 days in a row'},
+  'first_drink': {'title': 'First Sip', 'emoji': 'ðŸ’§', 'desc': 'Logged your first drink'},
+  'goal_hit': {'title': 'Goal Crusher', 'emoji': 'ðŸŽ¯', 'desc': 'Hit your daily goal'},
+  'streak_3': {'title': '3-Day Streak', 'emoji': 'ðŸ”¥', 'desc': '3 days in a row'},
+  'streak_7': {'title': 'Week Warrior', 'emoji': 'â­', 'desc': '7 days in a row'},
+  'streak_30': {'title': 'Hydration Hero', 'emoji': 'ðŸ‘‘', 'desc': '30 days in a row'},
 };
 
 class DrinkLog {
@@ -163,7 +163,7 @@ Future<void> _initTimezone() async {
 }
 
 class HydroTrackApp extends StatelessWidget {
-  const HydroTrackApp({super.key});const HydroTrackApp({super.key});
+  const HydroTrackApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -322,120 +322,120 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           ),
         ),
         child: SafeArea(
-        child: FadeTransition(
-          opacity: _animController,
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(28.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 20),
-                  const _WaterDropLogo(size: 90),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Let\'s personalize\nyour goal',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 36),
-                  Text('I am...', style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      _GenderCard(
-                        label: 'Male',
-                        icon: Icons.male_rounded,
-                        selected: _gender == 'male',
-                        onTap: () => setState(() => _gender = 'male'),
-                      ),
-                      const SizedBox(width: 12),
-                      _GenderCard(
-                        label: 'Female',
-                        icon: Icons.female_rounded,
-                        selected: _gender == 'female',
-                        onTap: () => setState(() => _gender = 'female'),
-                      ),
-                      const SizedBox(width: 12),
-                      _GenderCard(
-                        label: 'Other',
-                        icon: Icons.person_rounded,
-                        selected: _gender == 'other',
-                        onTap: () => setState(() => _gender = 'other'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 36),
-                  Text('Your weight', style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${_weightKg.round()} kg',
-                    style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-                  ),
-                  Slider(
-                    value: _weightKg,
-                    min: 30,
-                    max: 500,
-                    divisions: 470,
-                    label: '${_weightKg.round()} kg',
-                    onChanged: (v) => setState(() => _weightKg = v),
-                  ),
-                  const SizedBox(height: 20),
-                  Text('Your age', style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${_age.round()} yrs',
-                    style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-                  ),
-                  Slider(
-                    value: _age,
-                    min: 10,
-                    max: 150,
-                    divisions: 140,
-                    label: '${_age.round()} yrs',
-                    onChanged: (v) => setState(() => _age = v),
-                  ),
-                  const SizedBox(height: 32),
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(20),
+          child: FadeTransition(
+            opacity: _animController,
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(28.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 20),
+                    const _WaterDropLogo(size: 90),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Let\'s personalize\nyour goal',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold),
                     ),
-                    child: Row(
+                    const SizedBox(height: 36),
+                    Text('I am...', style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 12),
+                    Row(
                       children: [
-                        const Icon(Icons.water_drop_rounded),
+                        _GenderCard(
+                          label: 'Male',
+                          icon: Icons.male_rounded,
+                          selected: _gender == 'male',
+                          onTap: () => setState(() => _gender = 'male'),
+                        ),
                         const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            canContinue
-                                ? 'Your suggested goal: ${_calculateGoal()} ml/day'
-                                : 'Pick an option above to see your goal',
-                          ),
+                        _GenderCard(
+                          label: 'Female',
+                          icon: Icons.female_rounded,
+                          selected: _gender == 'female',
+                          onTap: () => setState(() => _gender = 'female'),
+                        ),
+                        const SizedBox(width: 12),
+                        _GenderCard(
+                          label: 'Other',
+                          icon: Icons.person_rounded,
+                          selected: _gender == 'other',
+                          onTap: () => setState(() => _gender = 'other'),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: 54,
-                    child: ElevatedButton(
-                      onPressed: canContinue ? _finishOnboarding : null,
-                      child: const Text('Get Started', style: TextStyle(fontSize: 16)),
+                    const SizedBox(height: 36),
+                    Text('Your weight', style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${_weightKg.round()} kg',
+                      style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                ],
+                    Slider(
+                      value: _weightKg,
+                      min: 30,
+                      max: 500,
+                      divisions: 470,
+                      label: '${_weightKg.round()} kg',
+                      onChanged: (v) => setState(() => _weightKg = v),
+                    ),
+                    const SizedBox(height: 20),
+                    Text('Your age', style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${_age.round()} yrs',
+                      style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+                    ),
+                    Slider(
+                      value: _age,
+                      min: 10,
+                      max: 150,
+                      divisions: 140,
+                      label: '${_age.round()} yrs',
+                      onChanged: (v) => setState(() => _age = v),
+                    ),
+                    const SizedBox(height: 32),
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.water_drop_rounded),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              canContinue
+                                  ? 'Your suggested goal: ${_calculateGoal()} ml/day'
+                                  : 'Pick an option above to see your goal',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 54,
+                      child: ElevatedButton(
+                        onPressed: canContinue ? _finishOnboarding : null,
+                        child: const Text('Get Started', style: TextStyle(fontSize: 16)),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
               ),
             ),
           ),
         ),
-        ),
       ),
     );
-  }}
+  }
 }
 
 class _GenderCard extends StatelessWidget {
@@ -825,7 +825,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       const int maxAlarms = 50;
 
       for (int dayOffset = 0; dayOffset < maxDays && scheduledCount < maxAlarms; dayOffset++) {
-        for (final slot in slots) {for (final slot in slots) {
+        for (final slot in slots) {
           if (scheduledCount >= maxAlarms) break;
 
           var scheduled = tz.TZDateTime(
@@ -857,7 +857,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Reminders on — every ${reminderIntervalMin}m, quiet from '
+              'Reminders on â€” every ${reminderIntervalMin}m, quiet from '
               '${quietStart.format(context)} to ${quietEnd.format(context)}',
             ),
           ),
@@ -1078,7 +1078,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text('🔥', style: TextStyle(fontSize: 18)),
+                          const Text('ðŸ”¥', style: TextStyle(fontSize: 18)),
                           const SizedBox(width: 6),
                           Text(
                             '$_streakDays day${_streakDays == 1 ? '' : 's'} streak',
@@ -1193,7 +1193,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   if (remindersOn) ...[
                     const SizedBox(height: 8),
                     Text(
-                      'Quiet ${quietStart.format(context)} – ${quietEnd.format(context)}',
+                      'Quiet ${quietStart.format(context)} â€“ ${quietEnd.format(context)}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
@@ -1246,7 +1246,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
                     child: Row(
                       children: [
-                        const Text('🏆', style: TextStyle(fontSize: 24)),
+                        const Text('ðŸ†', style: TextStyle(fontSize: 24)),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
@@ -1316,7 +1316,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 left: 24,
                 right: 24,
                 top: 24,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
               ),
               child: SingleChildScrollView(
                 child: Column(
@@ -1712,7 +1712,7 @@ class BadgesScreen extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Text('🏅', style: TextStyle(fontSize: 28)),
+                const Text('ðŸ…', style: TextStyle(fontSize: 28)),
                 const SizedBox(width: 12),
                 Text('Longest streak: $longestStreak days',
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
