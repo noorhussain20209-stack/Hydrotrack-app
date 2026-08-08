@@ -1079,7 +1079,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text('ðŸ”¥', style: TextStyle(fontSize: 18)),
+                          const Text('\u{1F525}', style: TextStyle(fontSize: 18)), // 🔥
                           const SizedBox(width: 6),
                           Text(
                             '$_streakDays day${_streakDays == 1 ? '' : 's'} streak',
@@ -1194,7 +1194,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   if (remindersOn) ...[
                     const SizedBox(height: 8),
                     Text(
-                      'Quiet ${quietStart.format(context)} â€“ ${quietEnd.format(context)}',
+                      'Quiet ${quietStart.format(context)} \u{2013} ${quietEnd.format(context)}',  // –
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
@@ -1247,7 +1247,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
                     child: Row(
                       children: [
-                        const Text('ðŸ†', style: TextStyle(fontSize: 24)),
+                        const Text('\u{1F3C6}', style: TextStyle(fontSize: 24)), // 🏆
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
@@ -1713,7 +1713,7 @@ class BadgesScreen extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Text('ðŸ…', style: TextStyle(fontSize: 28)),
+                const Text('\u{1F3C5}', style: TextStyle(fontSize: 28)), // 🥇
                 const SizedBox(width: 12),
                 Text('Longest streak: $longestStreak days',
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
@@ -1751,10 +1751,10 @@ class BadgesScreen extends StatelessWidget {
                             style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: isUnlocked ? null : Colors.grey)),
-                        Text(info['desc']!,
+                        Text(info['description']!,
                             style: TextStyle(
-                                fontSize: 12,
-                                color: isUnlocked ? Colors.grey.shade700 : Colors.grey)),
+                            fontSize: 12,
+                            color: isUnlocked ? Colors.grey.shade700 : Colors.grey)),
                       ],
                     ),
                   ),
