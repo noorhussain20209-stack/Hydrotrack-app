@@ -29,7 +29,7 @@ const Map<String, String> kDrinkEmoji = {
 };
 
 
-const Map<String, Map<String, String>> kBadges = {
+const Map<String, Map<String, String>> kBadgeInfo = {
   'first_drink': {'title': 'First Sip', 'emoji': '\u{1F4A7}', 'description': 'Logged your first drink'},        // 💧
   'goal_hit': {'title': 'Goal Crusher', 'emoji': '\u{1F3AF}', 'description': 'Hit your daily goal'},            // 🎯
   'streak_3': {'title': '3-Day Streak', 'emoji': '\u{1F525}', 'description': '3 days in a row'},                // 🔥
