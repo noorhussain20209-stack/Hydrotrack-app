@@ -20,14 +20,14 @@ const Map<String, double> kDrinkHydrationFactor = {
   'Juice': 0.9,
   'Milk': 1.0,
 };
-
 const Map<String, String> kDrinkEmoji = {
-  'Water': 'ðŸ’§',
-  'Tea': 'ðŸµ',
-  'Coffee': 'â˜•',
-  'Juice': 'ðŸ§ƒ',
-  'Milk': 'ðŸ¥›',
+  'Water': '\u{1F4A7}',   // 💧
+  'Tea': '\u{1F375}',     // 🍵
+  'Coffee': '\u{2615}',   // ☕
+  'Juice': '\u{1F9C3}',   // 🧃
+  'Milk': '\u{1F95B}',    // 🥛
 };
+
 
 const Map<String, Map<String, String>> kBadgeInfo = {
   'first_drink': {'title': 'First Sip', 'emoji': 'ðŸ’§', 'desc': 'Logged your first drink'},
