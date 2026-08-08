@@ -29,12 +29,12 @@ const Map<String, String> kDrinkEmoji = {
 };
 
 
-const Map<String, Map<String, String>> kBadgeInfo = {
-  'first_drink': {'title': 'First Sip', 'emoji': 'ðŸ’§', 'desc': 'Logged your first drink'},
-  'goal_hit': {'title': 'Goal Crusher', 'emoji': 'ðŸŽ¯', 'desc': 'Hit your daily goal'},
-  'streak_3': {'title': '3-Day Streak', 'emoji': 'ðŸ”¥', 'desc': '3 days in a row'},
-  'streak_7': {'title': 'Week Warrior', 'emoji': 'â­', 'desc': '7 days in a row'},
-  'streak_30': {'title': 'Hydration Hero', 'emoji': 'ðŸ‘‘', 'desc': '30 days in a row'},
+const Map<String, Map<String, String>> kBadges = {
+  'first_drink': {'title': 'First Sip', 'emoji': '\u{1F4A7}', 'description': 'Logged your first drink'},        // 💧
+  'goal_hit': {'title': 'Goal Crusher', 'emoji': '\u{1F3AF}', 'description': 'Hit your daily goal'},            // 🎯
+  'streak_3': {'title': '3-Day Streak', 'emoji': '\u{1F525}', 'description': '3 days in a row'},                // 🔥
+  'streak_7': {'title': 'Week Warrior', 'emoji': '\u{2694}\u{FE0F}', 'description': '7 days in a row'},         // ⚔️
+  'streak_30': {'title': 'Hydration Hero', 'emoji': '\u{1F3C6}', 'description': '30 days in a row'},            // 🏆
 };
 
 class DrinkLog {
