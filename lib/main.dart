@@ -79,9 +79,37 @@ void _tapFeedback() {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await _requestNotificationPermission();
+  await _requestExactAlarmAndBatteryExemption();
   await _initNotifications();
   await _initTimezone();
   runApp(const HydroTrackApp());
+}
+
+/// Android's Doze power-saving mode can batch or delay "inexact" scheduled
+/// notifications by a wide margin, and many phone brands (Xiaomi, Samsung,
+/// Oppo, etc.) aggressively kill background timers for apps still subject to
+/// battery optimization — the single most common reason a correctly-coded
+/// reminder app silently stops notifying. This asks for both the exact-alarm
+/// special permission (Android 12+) and a battery optimization exemption so
+/// scheduled reminders are far more likely to actually fire on time.
+Future<void> _requestExactAlarmAndBatteryExemption() async {
+  try {
+    final exactStatus = await Permission.scheduleExactAlarm.status;
+    if (!exactStatus.isGranted) {
+      await Permission.scheduleExactAlarm.request();
+    }
+  } catch (e) {
+    print('Exact alarm permission not available on this platform: $e');
+  }
+
+  try {
+    final batteryStatus = await Permission.ignoreBatteryOptimizations.status;
+    if (!batteryStatus.isGranted) {
+      await Permission.ignoreBatteryOptimizations.request();
+    }
+  } catch (e) {
+    print('Battery optimization exemption not available on this platform: $e');
+  }
 }
 
 Future<void> _requestNotificationPermission() async {
