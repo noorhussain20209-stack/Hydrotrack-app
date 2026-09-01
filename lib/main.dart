@@ -843,6 +843,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         iOS: iosDetails,
       );
 
+      // Prefer exact-time delivery when the OS grants it — inexact mode lets
+      // Android batch/delay reminders under Doze, which defeats the point of
+      // a "drink water at this time" nudge. Falls back to inexact (which
+      // needs no special permission) when exact isn't available, so
+      // scheduling never fails outright either way.
+      AndroidScheduleMode scheduleMode = AndroidScheduleMode.inexactAllowWhileIdle;
+      try {
+        final exactStatus = await Permission.scheduleExactAlarm.status;
+        if (exactStatus.isGranted) {
+          scheduleMode = AndroidScheduleMode.exactAllowWhileIdle;
+        }
+      } catch (e) {
+        print('Exact alarm status check failed, using inexact scheduling: $e');
+      }
+
       final slots = _wakingSlotsForDay();
       int notifId = 0;
       final now = tz.TZDateTime.now(tz.local);
@@ -872,7 +887,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             'Drink a glass of water to stay on track today.',
             scheduled,
             notificationDetails,
-            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+            androidScheduleMode: scheduleMode,
               uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
           );
           scheduledCount++;
