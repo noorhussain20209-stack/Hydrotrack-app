@@ -911,7 +911,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       print('Schedule reminders error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error scheduling reminders')),
+          SnackBar(
+            content: Text('Error scheduling reminders: $e'),
+            duration: const Duration(seconds: 8),
+          ),
         );
       }
     }
