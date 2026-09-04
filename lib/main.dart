@@ -176,14 +176,26 @@ Future<void> _initTimezone() async {
   try {
     tzdata.initializeTimeZones();
     final offset = DateTime.now().timeZoneOffset;
-    tz.setLocalLocation(
-      tz.Location(
-        'device_local',
-        const [-9223372036854775808],
-        const [0],
-        [tz.TimeZone(offset.inSeconds, isDst: false, abbreviation: 'LOC')],
-      ),
-    );
+    // A custom-named zone like the previous 'device_local' computes correct
+    // times fine in pure Dart, but the native Android side needs a REAL IANA
+    // timezone id to actually arm a scheduled alarm — it was throwing
+    // "Unknown time-zone ID: device_local" and silently failing every single
+    // reminder. Etc/GMT zones are fixed-offset, DST-free, and guaranteed to
+    // exist in any IANA database, so rounding to the nearest whole hour and
+    // using one of those always resolves to a name Android actually
+    // recognizes. (Etc/GMT's sign is inverted from normal UTC notation:
+    // Etc/GMT-5 means UTC+5.)
+    final roundedHours = ((offset.inMinutes / 60).round()).clamp(-12, 14).toInt();
+    tz.Location resolved = tz.UTC;
+    if (roundedHours != 0) {
+      final etcName = 'Etc/GMT${roundedHours > 0 ? '-' : '+'}${roundedHours.abs()}';
+      try {
+        resolved = tz.getLocation(etcName);
+      } catch (_) {
+        resolved = tz.UTC;
+      }
+    }
+    tz.setLocalLocation(resolved);
   } catch (e) {
     print('Timezone initialization error, using UTC: $e');
     tz.setLocalLocation(tz.UTC);
