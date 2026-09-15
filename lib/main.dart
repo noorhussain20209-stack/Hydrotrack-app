@@ -19,14 +19,81 @@ const Map<String, double> kDrinkHydrationFactor = {
   'Coffee': 0.8,
   'Juice': 0.9,
   'Milk': 1.0,
+  'Smoothie': 0.85,
+  'Soda': 0.85,
+  'Sports Drink': 1.0,
+  'Energy Drink': 0.7,
+  'Hot Chocolate': 0.85,
+  'Herbal Tea': 1.0,
 };
 const Map<String, String> kDrinkEmoji = {
-  'Water': '\u{1F4A7}',   // 💧
-  'Tea': '\u{1F375}',     // 🍵
-  'Coffee': '\u{2615}',   // ☕
-  'Juice': '\u{1F9C3}',   // 🧃
-  'Milk': '\u{1F95B}',    // 🥛
+  'Water': '\u{1F4A7}',        // 💧
+  'Tea': '\u{1F375}',          // 🍵
+  'Coffee': '\u{2615}',        // ☕
+  'Juice': '\u{1F9C3}',        // 🧃
+  'Milk': '\u{1F95B}',         // 🥛
+  'Smoothie': '\u{1F379}',     // 🍹
+  'Soda': '\u{1F964}',         // 🥤
+  'Sports Drink': '\u{26A1}',  // ⚡
+  'Energy Drink': '\u{1F96B}', // 🥫
+  'Hot Chocolate': '\u{1F36B}',// 🍫
+  'Herbal Tea': '\u{1F33F}',   // 🌿
 };
+// Approximate average calories per 100ml. Real products vary by brand/recipe
+// (added sugar, milk, etc.) — these are reasonable typical-case estimates for
+// giving the user a useful ballpark in reports, not a precise nutrition label.
+const Map<String, double> kDrinkCaloriesPer100ml = {
+  'Water': 0,
+  'Tea': 1,
+  'Coffee': 2,
+  'Juice': 45,
+  'Milk': 61,
+  'Smoothie': 60,
+  'Soda': 42,
+  'Sports Drink': 24,
+  'Energy Drink': 45,
+  'Hot Chocolate': 70,
+  'Herbal Tea': 1,
+};
+const Map<String, Color> kDrinkColor = {
+  'Water': Color(0xFF29B6F6),
+  'Tea': Color(0xFF8D6E63),
+  'Coffee': Color(0xFF4E342E),
+  'Juice': Color(0xFFFFA726),
+  'Milk': Color(0xFFB0BEC5),
+  'Smoothie': Color(0xFFEC407A),
+  'Soda': Color(0xFF7E57C2),
+  'Sports Drink': Color(0xFF26A69A),
+  'Energy Drink': Color(0xFFFFCA28),
+  'Hot Chocolate': Color(0xFF795548),
+  'Herbal Tea': Color(0xFF9CCC65),
+};
+// A simple shape key per drink so the picker and icons feel visually varied,
+// not just a color swap on the same pill shape every time.
+const Map<String, String> kDrinkShape = {
+  'Water': 'circle',
+  'Tea': 'bevel',
+  'Coffee': 'circle',
+  'Juice': 'rounded',
+  'Milk': 'rounded',
+  'Smoothie': 'bevel',
+  'Soda': 'circle',
+  'Sports Drink': 'rounded',
+  'Energy Drink': 'rounded',
+  'Hot Chocolate': 'circle',
+  'Herbal Tea': 'bevel',
+};
+ShapeBorder drinkShapeBorder(String drinkType) {
+  switch (kDrinkShape[drinkType] ?? 'circle') {
+    case 'bevel':
+      return BeveledRectangleBorder(borderRadius: BorderRadius.circular(10));
+    case 'rounded':
+      return RoundedRectangleBorder(borderRadius: BorderRadius.circular(16));
+    case 'circle':
+    default:
+      return const CircleBorder();
+  }
+}
 
 
 const Map<String, Map<String, String>> kBadgeInfo = {
