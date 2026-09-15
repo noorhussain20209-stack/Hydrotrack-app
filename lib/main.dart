@@ -1254,20 +1254,42 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   const SizedBox(height: 20),
                   SizedBox(
-                    height: 44,
+                    height: 64,
                     child: ListView(
                       scrollDirection: Axis.horizontal,
                       children: kDrinkHydrationFactor.keys.map((drink) {
                         final selected = _selectedDrink == drink;
+                        final color = kDrinkColor[drink] ?? Theme.of(context).colorScheme.primary;
                         return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: ChoiceChip(
-                            label: Text('${kDrinkEmoji[drink]} $drink'),
-                            selected: selected,
-                            onSelected: (_) {
+                          padding: const EdgeInsets.only(right: 10),
+                          child: GestureDetector(
+                            onTap: () {
                               _tapFeedback();
                               setState(() => _selectedDrink = drink);
                             },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: selected ? color.withOpacity(0.18) : Theme.of(context).cardColor,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: selected ? color : Colors.grey.withOpacity(0.3), width: selected ? 2 : 1),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 28,
+                                    height: 28,
+                                    decoration: ShapeDecoration(color: color, shape: drinkShapeBorder(drink)),
+                                    alignment: Alignment.center,
+                                    child: Text(kDrinkEmoji[drink] ?? '', style: const TextStyle(fontSize: 14)),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(drink, style: TextStyle(fontWeight: selected ? FontWeight.bold : FontWeight.normal, color: selected ? color : null)),
+                                ],
+                              ),
+                            ),
                           ),
                         );
                       }).toList(),
