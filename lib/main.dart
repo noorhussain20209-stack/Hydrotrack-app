@@ -834,6 +834,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final effectiveDrink = drinkType ?? _selectedDrink;
     final factor = kDrinkHydrationFactor[effectiveDrink] ?? 1.0;
     final effectiveAmount = (amount * factor).round();
+    final drinkCalories = (kDrinkCaloriesPer100ml[effectiveDrink] ?? 0) * amount / 100.0;
     final wasBelowGoal = consumedMl < dailyGoalMl;
 
     final log = DrinkLog(
@@ -842,6 +843,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       drinkType: effectiveDrink,
       hydrationFactor: factor,
       effectiveMl: effectiveAmount,
+      calories: drinkCalories,
     );
 
     setState(() {
