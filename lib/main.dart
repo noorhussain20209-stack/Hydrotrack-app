@@ -803,7 +803,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         '${log.rawAmountMl}|'
         '${log.drinkType}|'
         '${log.hydrationFactor}|'
-        '${log.effectiveMl}'
+        '${log.effectiveMl}|'
+        '${log.calories}'
       ).toList();
       await prefs.setStringList('logs_$today', logsJson);
       await prefs.setString('history_$today', '$consumedMl,$dailyGoalMl');
