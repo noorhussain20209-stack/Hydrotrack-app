@@ -1443,6 +1443,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _quickAddButton(String label, int amount) {
+    final drinkColor = kDrinkColor[_selectedDrink] ?? Theme.of(context).colorScheme.primary;
     return _BouncyButton(
       onTap: () => _addWater(amount),
       child: Container(
@@ -1454,13 +1455,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.primary.withOpacity(0.7),
+              drinkColor,
+              drinkColor.withOpacity(0.7),
             ],
           ),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.35),
+              color: drinkColor.withOpacity(0.35),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
