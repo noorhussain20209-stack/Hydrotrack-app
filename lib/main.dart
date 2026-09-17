@@ -697,13 +697,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         _drinkLogs = logsJson.map((json) {
           try {
             final parts = json.split('|');
-            if (parts.length == 5) {
+            if (parts.length == 6) {
               return DrinkLog(
                 timestamp: DateTime.fromMillisecondsSinceEpoch(int.parse(parts[0])),
                 rawAmountMl: int.parse(parts[1]),
                 drinkType: parts[2],
                 hydrationFactor: double.parse(parts[3]),
                 effectiveMl: int.parse(parts[4]),
+                calories: double.parse(parts[5]),
+              );
+            }
+            // Backward-compat: entries saved before calorie tracking was
+            // added only have 5 fields — estimate calories from drink type
+            // so old history still reports something sensible.
+            if (parts.length == 5) {
+              final dType = parts[2];
+              final rawMl = int.parse(parts[1]);
+              return DrinkLog(
+                timestamp: DateTime.fromMillisecondsSinceEpoch(int.parse(parts[0])),
+                rawAmountMl: rawMl,
+                drinkType: dType,
+                hydrationFactor: double.parse(parts[3]),
+                effectiveMl: int.parse(parts[4]),
+                calories: (kDrinkCaloriesPer100ml[dType] ?? 0) * rawMl / 100.0,
               );
             }
             return null;
