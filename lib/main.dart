@@ -110,6 +110,7 @@ class DrinkLog {
   final String drinkType;
   final double hydrationFactor;
   final int effectiveMl;
+  final double calories;
 
   DrinkLog({
     required this.timestamp,
@@ -117,6 +118,7 @@ class DrinkLog {
     required this.drinkType,
     required this.hydrationFactor,
     required this.effectiveMl,
+    this.calories = 0,
   });
 
   Map<String, dynamic> toJson() => {
@@ -125,6 +127,7 @@ class DrinkLog {
     'drinkType': drinkType,
     'hydrationFactor': hydrationFactor,
     'effectiveMl': effectiveMl,
+    'calories': calories,
   };
 
   factory DrinkLog.fromJson(Map<String, dynamic> json) => DrinkLog(
@@ -133,6 +136,12 @@ class DrinkLog {
     drinkType: json['drinkType'] ?? 'Water',
     hydrationFactor: (json['hydrationFactor'] ?? 1.0).toDouble(),
     effectiveMl: json['effectiveMl'] ?? 0,
+    // Older saved entries (before calorie tracking was added) won't have this
+    // key — fall back to estimating it from the drink type so old history
+    // still shows a reasonable calorie total instead of a hole in the report.
+    calories: json['calories'] != null
+        ? (json['calories'] as num).toDouble()
+        : ((kDrinkCaloriesPer100ml[json['drinkType'] ?? 'Water'] ?? 0) * (json['rawAmountMl'] ?? 0) / 100.0),
   );
 }
 
