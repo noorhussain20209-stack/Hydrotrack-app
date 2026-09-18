@@ -1763,10 +1763,51 @@ class _StatsScreenState extends State<StatsScreen> {
   int _goal = 2000;
   bool _loading = true;
 
+  // Per-drink-type totals, used to build the breakdown lists and insights.
+  Map<String, int> _todayByType = {};
+  Map<String, int> _weekByType = {};
+  double _todayCalories = 0;
+  double _weekCalories = 0;
+  int _daysGoalMet = 0;
+
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  List<DrinkLog> _parseLogsForDate(SharedPreferences prefs, String key) {
+    final rawList = prefs.getStringList('logs_$key') ?? [];
+    final logs = <DrinkLog>[];
+    for (final entryStr in rawList) {
+      try {
+        final parts = entryStr.split('|');
+        if (parts.length == 6) {
+          logs.add(DrinkLog(
+            timestamp: DateTime.fromMillisecondsSinceEpoch(int.parse(parts[0])),
+            rawAmountMl: int.parse(parts[1]),
+            drinkType: parts[2],
+            hydrationFactor: double.parse(parts[3]),
+            effectiveMl: int.parse(parts[4]),
+            calories: double.parse(parts[5]),
+          ));
+        } else if (parts.length == 5) {
+          final dType = parts[2];
+          final rawMl = int.parse(parts[1]);
+          logs.add(DrinkLog(
+            timestamp: DateTime.fromMillisecondsSinceEpoch(int.parse(parts[0])),
+            rawAmountMl: rawMl,
+            drinkType: dType,
+            hydrationFactor: double.parse(parts[3]),
+            effectiveMl: int.parse(parts[4]),
+            calories: (kDrinkCaloriesPer100ml[dType] ?? 0) * rawMl / 100.0,
+          ));
+        }
+      } catch (e) {
+        // Skip a single malformed entry rather than losing the whole day.
+      }
+    }
+    return logs;
   }
 
   Future<void> _load() async {
@@ -1775,6 +1816,9 @@ class _StatsScreenState extends State<StatsScreen> {
       _goal = prefs.getInt('goal') ?? 2000;
       final now = DateTime.now();
       final entries = <MapEntry<String, int>>[];
+      final weekByType = <String, int>{};
+      double weekCalories = 0;
+      int goalMetCount = 0;
 
       for (int i = 6; i >= 0; i--) {
         final day = now.subtract(Duration(days: i));
@@ -1783,11 +1827,32 @@ class _StatsScreenState extends State<StatsScreen> {
         final parts = historyStr.split(',');
         final value = parts.isNotEmpty ? int.tryParse(parts[0]) ?? 0 : 0;
         entries.add(MapEntry(_shortWeekday(day.weekday), value));
+        if (value >= _goal && _goal > 0) goalMetCount++;
+
+        final dayLogs = _parseLogsForDate(prefs, key);
+        for (final log in dayLogs) {
+          weekByType[log.drinkType] = (weekByType[log.drinkType] ?? 0) + log.rawAmountMl;
+          weekCalories += log.calories;
+        }
+      }
+
+      final todayKey = now.toIso8601String().substring(0, 10);
+      final todayLogs = _parseLogsForDate(prefs, todayKey);
+      final todayByType = <String, int>{};
+      double todayCalories = 0;
+      for (final log in todayLogs) {
+        todayByType[log.drinkType] = (todayByType[log.drinkType] ?? 0) + log.rawAmountMl;
+        todayCalories += log.calories;
       }
 
       if (mounted) {
         setState(() {
           _last7Days = entries;
+          _weekByType = weekByType;
+          _weekCalories = weekCalories;
+          _todayByType = todayByType;
+          _todayCalories = todayCalories;
+          _daysGoalMet = goalMetCount;
           _loading = false;
         });
       }
@@ -1804,66 +1869,180 @@ class _StatsScreenState extends State<StatsScreen> {
     return names[weekday - 1];
   }
 
+  List<String> _buildInsights() {
+    final insights = <String>[];
+    if (_weekByType.isEmpty) {
+      insights.add('Log a few drinks this week to see personalized insights here.');
+      return insights;
+    }
+    final totalWeekMl = _weekByType.values.fold(0, (a, b) => a + b);
+    final sortedTypes = _weekByType.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final topType = sortedTypes.first;
+    if (totalWeekMl > 0) {
+      final topPct = (topType.value / totalWeekMl * 100).round();
+      insights.add('${topType.key} made up $topPct% of everything you drank this week.');
+    }
+
+    insights.add('You hit your goal on $_daysGoalMet of the last 7 days.');
+
+    final caffeinated = (_weekByType['Coffee'] ?? 0) + (_weekByType['Tea'] ?? 0) + (_weekByType['Energy Drink'] ?? 0);
+    if (totalWeekMl > 0 && caffeinated / totalWeekMl > 0.4) {
+      final pct = (caffeinated / totalWeekMl * 100).round();
+      insights.add('$pct% of your intake was caffeinated — consider balancing with more water.');
+    }
+
+    final sugary = (_weekByType['Soda'] ?? 0) + (_weekByType['Juice'] ?? 0) + (_weekByType['Energy Drink'] ?? 0) + (_weekByType['Smoothie'] ?? 0) + (_weekByType['Hot Chocolate'] ?? 0);
+    if (totalWeekMl > 0 && sugary / totalWeekMl > 0.3) {
+      final pct = (sugary / totalWeekMl * 100).round();
+      insights.add('$pct% of your intake came from sugary/caloric drinks — water and herbal tea are calorie-free ways to hit your goal.');
+    }
+
+    final avgDailyCalories = _weekCalories / 7;
+    insights.add('Average of ${avgDailyCalories.round()} kcal/day from drinks this week.');
+
+    return insights;
+  }
+
+  Widget _typeBreakdownList(Map<String, int> byType) {
+    if (byType.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 12),
+        child: Text('No drinks logged yet.'),
+      );
+    }
+    final total = byType.values.fold(0, (a, b) => a + b);
+    final sorted = byType.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    return Column(
+      children: sorted.map((entry) {
+        final color = kDrinkColor[entry.key] ?? Colors.grey;
+        final cal = (kDrinkCaloriesPer100ml[entry.key] ?? 0) * entry.value / 100.0;
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(
+            children: [
+              Container(
+                width: 22,
+                height: 22,
+                decoration: ShapeDecoration(color: color, shape: drinkShapeBorder(entry.key)),
+                alignment: Alignment.center,
+                child: Text(kDrinkEmoji[entry.key] ?? '', style: const TextStyle(fontSize: 11)),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                flex: 3,
+                child: Text(entry.key, style: const TextStyle(fontWeight: FontWeight.w600)),
+              ),
+              Expanded(
+                flex: 4,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    value: total > 0 ? entry.value / total : 0,
+                    minHeight: 8,
+                    backgroundColor: color.withOpacity(0.15),
+                    valueColor: AlwaysStoppedAnimation(color),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              SizedBox(
+                width: 96,
+                child: Text('${entry.value}ml · ${cal.round()}kcal',
+                    textAlign: TextAlign.right, style: const TextStyle(fontSize: 11)),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final maxVal = _last7Days.isEmpty
         ? 1
         : _last7Days.map((e) => e.value).reduce((a, b) => a > b ? a : b);
     final chartMax = maxVal > _goal ? maxVal : _goal;
+    final insights = _buildInsights();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Weekly Stats')),
+      appBar: AppBar(title: const Text('Reports')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
+          : ListView(
               padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Goal: $_goal ml/day',
-                      style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 24),
-                  Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: _last7Days.map((entry) {
-                        final heightFraction =
-                            chartMax == 0 ? 0.0 : entry.value / chartMax;
-                        final metGoal = entry.value >= _goal && _goal > 0;
-                        return TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 0, end: heightFraction.clamp(0.0, 1.0)),
-                          duration: const Duration(milliseconds: 600),
-                          curve: Curves.easeOutCubic,
-                          builder: (context, animatedHeight, _) {
-                            return Column(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Text('${entry.value}',
-                                    style: const TextStyle(fontSize: 11)),
-                                const SizedBox(height: 4),
-                                Container(
-                                  width: 28,
-                                  height: 160 * animatedHeight,
-                                  decoration: BoxDecoration(
-                                    color: metGoal
-                                        ? Colors.green
-                                        : Theme.of(context).colorScheme.primary,
-                                    borderRadius: const BorderRadius.vertical(
-                                        top: Radius.circular(6)),
-                                  ),
+              children: [
+                Text('Goal: $_goal ml/day',
+                    style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 24),
+                SizedBox(
+                  height: 220,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: _last7Days.map((entry) {
+                      final heightFraction =
+                          chartMax == 0 ? 0.0 : entry.value / chartMax;
+                      final metGoal = entry.value >= _goal && _goal > 0;
+                      return TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0, end: heightFraction.clamp(0.0, 1.0)),
+                        duration: const Duration(milliseconds: 600),
+                        curve: Curves.easeOutCubic,
+                        builder: (context, animatedHeight, _) {
+                          return Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text('${entry.value}',
+                                  style: const TextStyle(fontSize: 11)),
+                              const SizedBox(height: 4),
+                              Container(
+                                width: 28,
+                                height: 160 * animatedHeight,
+                                decoration: BoxDecoration(
+                                  color: metGoal
+                                      ? Colors.green
+                                      : Theme.of(context).colorScheme.primary,
+                                  borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(6)),
                                 ),
-                                const SizedBox(height: 8),
-                                Text(entry.key),
-                              ],
-                            );
-                          },
-                        );
-                      }).toList(),
-                    ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(entry.key),
+                            ],
+                          );
+                        },
+                      );
+                    }).toList(),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 32),
+                Text('Today', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 4),
+                Text('${_todayCalories.round()} kcal from drinks so far today'),
+                const SizedBox(height: 12),
+                _typeBreakdownList(_todayByType),
+                const SizedBox(height: 32),
+                Text('Last 7 Days', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 4),
+                Text('${_weekCalories.round()} kcal total · ${(_weekCalories / 7).round()} kcal/day average'),
+                const SizedBox(height: 12),
+                _typeBreakdownList(_weekByType),
+                const SizedBox(height: 32),
+                Text('Insights', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 12),
+                ...insights.map((text) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('• ', style: TextStyle(fontSize: 16)),
+                          Expanded(child: Text(text)),
+                        ],
+                      ),
+                    )),
+                const SizedBox(height: 24),
+              ],
             ),
     );
   }
