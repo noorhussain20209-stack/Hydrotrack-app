@@ -1655,15 +1655,107 @@ class _ConfettiPainter extends CustomPainter {
   bool shouldRepaint(covariant _ConfettiPainter oldDelegate) => true;
 }
 
+// Which vessel silhouette each drink type gets in the main progress display.
+const Map<String, String> kDrinkVessel = {
+  'Water': 'bottle',
+  'Tea': 'mug',
+  'Coffee': 'mug',
+  'Juice': 'glass',
+  'Milk': 'glass',
+  'Smoothie': 'glass',
+  'Soda': 'glass',
+  'Sports Drink': 'bottle',
+  'Energy Drink': 'glass',
+  'Hot Chocolate': 'mug',
+  'Herbal Tea': 'mug',
+};
+
+class _BottleClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final w = size.width;
+    final h = size.height;
+    final neckW = w * 0.42;
+    final neckH = h * 0.22;
+    final neckLeft = (w - neckW) / 2;
+    final neckRight = neckLeft + neckW;
+    final shoulderY = neckH;
+    final bodyTop = neckH + h * 0.08;
+    final corner = w * 0.12;
+
+    final path = Path();
+    path.moveTo(neckLeft, 0);
+    path.lineTo(neckRight, 0);
+    path.lineTo(neckRight, shoulderY);
+    path.lineTo(w - corner, bodyTop);
+    path.quadraticBezierTo(w, bodyTop, w, bodyTop + corner);
+    path.lineTo(w, h - corner);
+    path.quadraticBezierTo(w, h, w - corner, h);
+    path.lineTo(corner, h);
+    path.quadraticBezierTo(0, h, 0, h - corner);
+    path.lineTo(0, bodyTop + corner);
+    path.quadraticBezierTo(0, bodyTop, corner, bodyTop);
+    path.lineTo(neckLeft, shoulderY);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}
+
+// Shared body shape for both "glass" and "mug" — a mug is this same
+// rounded-rect body with a decorative handle ring added beside it.
+class _RoundedRectVesselClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final radius = size.width * 0.16;
+    return Path()
+      ..addRRect(RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+        Radius.circular(radius),
+      ));
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}
+
+// Strokes the outline of whatever vessel shape is passed in, using the exact
+// same clipper as the fill so the outline can never drift out of alignment
+// with the liquid shape it's supposed to trace.
+class _VesselOutlinePainter extends CustomPainter {
+  final CustomClipper<Path> clipper;
+  final Color color;
+  final double strokeWidth;
+  _VesselOutlinePainter({required this.clipper, required this.color, this.strokeWidth = 4});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = clipper.getClip(size);
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _VesselOutlinePainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.strokeWidth != strokeWidth;
+}
+
 class WaterWaveRing extends StatefulWidget {
   final double progress;
   final double size;
   final Color color;
+  final String drinkType;
   const WaterWaveRing({
     super.key,
     required this.progress,
     required this.size,
     required this.color,
+    this.drinkType = 'Water',
   });
 
   @override
@@ -1691,6 +1783,11 @@ class _WaterWaveRingState extends State<WaterWaveRing>
 
   @override
   Widget build(BuildContext context) {
+    final vessel = kDrinkVessel[widget.drinkType] ?? 'glass';
+    final CustomClipper<Path> clipper =
+        vessel == 'bottle' ? _BottleClipper() : _RoundedRectVesselClipper();
+    final showHandle = vessel == 'mug';
+
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: widget.progress.clamp(0.0, 1.0)),
       duration: const Duration(milliseconds: 900),
@@ -1699,18 +1796,46 @@ class _WaterWaveRingState extends State<WaterWaveRing>
         return AnimatedBuilder(
           animation: _controller,
           builder: (context, _) {
-            return ClipOval(
-              child: Container(
-                width: widget.size,
-                height: widget.size,
-                color: widget.color.withOpacity(0.08),
-                child: CustomPaint(
-                  painter: _WavePainter(
-                    progress: animatedProgress,
-                    wavePhase: _controller.value * 2 * pi,
-                    color: widget.color,
+            return SizedBox(
+              width: widget.size,
+              height: widget.size,
+              child: Stack(
+                alignment: Alignment.center,
+                clipBehavior: Clip.none,
+                children: [
+                  if (showHandle)
+                    Positioned(
+                      right: -widget.size * 0.12,
+                      top: widget.size * 0.28,
+                      child: Container(
+                        width: widget.size * 0.34,
+                        height: widget.size * 0.4,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: widget.color, width: widget.size * 0.06),
+                        ),
+                      ),
+                    ),
+                  ClipPath(
+                    clipper: clipper,
+                    child: Container(
+                      width: widget.size,
+                      height: widget.size,
+                      color: widget.color.withOpacity(0.08),
+                      child: CustomPaint(
+                        painter: _WavePainter(
+                          progress: animatedProgress,
+                          wavePhase: _controller.value * 2 * pi,
+                          color: widget.color,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  CustomPaint(
+                    size: Size(widget.size, widget.size),
+                    painter: _VesselOutlinePainter(clipper: clipper, color: widget.color),
+                  ),
+                ],
               ),
             );
           },
