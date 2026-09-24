@@ -1248,18 +1248,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       WaterWaveRing(
                         progress: progress,
                         size: 220,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      Container(
-                        width: 220,
-                        height: 220,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Theme.of(context).colorScheme.primary,
-                            width: 4,
-                          ),
-                        ),
+                        color: kDrinkColor[_selectedDrink] ?? Theme.of(context).colorScheme.primary,
+                        drinkType: _selectedDrink,
                       ),
                       Column(
                         mainAxisSize: MainAxisSize.min,
